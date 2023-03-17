@@ -1,0 +1,41 @@
+{
+  "name": "apocrypha",
+  "version": "0.0.1",
+  "description": "an engine for building websites with markdoc",
+  "license": "UNLICENSED",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "files": [
+    "src/catalog.d.ts"
+  ],
+  "dependencies": {
+    "@markdoc/markdoc": "^0.2.2",
+    "chokidar": "^3.5.3",
+    "fast-glob": "^3.2.12",
+    "js-yaml": "^4.1.0",
+    "vite": "4.1.1"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.5",
+    "@types/node": "^18.15.3",
+    "@types/react": "^18.0.28",
+    "command-line-args": "^5.2.1",
+    "tosource": "^2.0.0-alpha.3",
+    "typescript": "^5.0.2"
+  },
+  "prettier": {
+    "singleQuote": true,
+    "trailingComma": "all",
+    "bracketSpacing": false,
+    "arrowParens": "always"
+  },
+  "scripts": {
+    "build": "yarn run build:library && yarn run build:types",
+    "build:library": "node build.js",
+    "build:types": "tsc --emitDeclarationOnly --outDir dist",
+    "dev": "node build.js --watch",
+    "start": "node dist/index.js",
+    "test": "npx jest",
+    "zen": "npx jest --watch"
+  }
+}
