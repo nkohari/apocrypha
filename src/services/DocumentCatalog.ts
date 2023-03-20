@@ -1,30 +1,30 @@
 import {EventEmitter} from 'events';
 import chokidar, {FSWatcher} from 'chokidar';
 import glob from 'fast-glob';
-import type {Config, Document} from '../models';
+import type {Document, Paths} from '../models';
 import type {DocumentFactory} from './DocumentFactory';
 
 type DocumentCatalogParams<TMeta extends object> = {
-  config: Config;
   documentFactory: DocumentFactory<TMeta>;
+  paths: Paths;
 };
 
 export class DocumentCatalog<TMeta extends object> extends EventEmitter {
   articles: Record<string, Document<TMeta>>;
-  config: Config;
   documentFactory: DocumentFactory<TMeta>;
-  globPattern: string;
   fsWatcher?: FSWatcher;
+  globPattern: string;
+  paths: Paths;
 
   private initialScanPromise: Maybe<Promise<void>>;
 
-  constructor({config, documentFactory}: DocumentCatalogParams<TMeta>) {
+  constructor({documentFactory, paths}: DocumentCatalogParams<TMeta>) {
     super();
 
-    this.config = config;
     this.documentFactory = documentFactory;
+    this.paths = paths;
 
-    this.globPattern = `${this.config.paths.content}**/*.md`;
+    this.globPattern = `${this.paths.content}**/*.md`;
     this.articles = {};
   }
 

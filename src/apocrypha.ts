@@ -1,52 +1,50 @@
 import {Plugin, ViteDevServer} from 'vite';
-import type {MarkdocDeclaration, MetadataPlugin} from './framework';
-import {Config} from './models';
+import {Tokenizer} from '@markdoc/markdoc';
+import type {MetadataPlugin} from './framework';
+import {Paths} from './models';
 import {
   DocumentCatalog,
   DocumentFactory,
-  MarkdocParser,
   CodeGenerator,
+  MarkdocParser,
 } from './services';
 import {ArrayOrHash, arrayifyParameter} from './util';
 
 const CATALOG_MODULE_ID = 'apocrypha/catalog';
+const CONFIG_MODULE_ID = 'apocrypha/config';
 const ARTICLE_FILENAME_PATTERN = /\.md/;
 
 const mangleModuleName = (name: string) => `\0${name}`;
 
-export type CreateApocryphaParams<TMeta extends object> = {
+export type ApocryphaParams<TMeta extends object> = {
   paths: {
     components: string;
     content: string;
+    declarations: string;
   };
-  declarations: ArrayOrHash<MarkdocDeclaration<TMeta>>;
   plugins?: {
     metadata?: ArrayOrHash<MetadataPlugin<TMeta>>;
   };
+  tokenizer?: Tokenizer;
 };
 
-export function apocrypha<TMeta extends object = Record<string, any>>({
-  paths,
-  declarations,
-  plugins,
-}: CreateApocryphaParams<TMeta>): Plugin {
-  const config = new Config({paths});
+export function apocrypha<TMeta extends object = Record<string, any>>(
+  params: ApocryphaParams<TMeta>,
+): Plugin {
+  const paths = new Paths(params.paths);
 
-  const parser = new MarkdocParser({
-    declarations: arrayifyParameter(declarations),
-  });
-
-  const codeGenerator = new CodeGenerator({config});
+  const parser = new MarkdocParser({tokenizer: params.tokenizer});
+  const codeGenerator = new CodeGenerator({paths});
 
   const documentFactory = new DocumentFactory({
-    config,
+    metadataPlugins: arrayifyParameter(params.plugins?.metadata),
     parser,
-    metadataPlugins: arrayifyParameter(plugins?.metadata),
+    paths,
   });
 
   const catalog = new DocumentCatalog({
-    config,
     documentFactory,
+    paths,
   });
 
   return {
@@ -76,8 +74,8 @@ export function apocrypha<TMeta extends object = Record<string, any>>({
     },
 
     resolveId(id: string) {
-      if (id === CATALOG_MODULE_ID) {
-        return mangleModuleName(CATALOG_MODULE_ID);
+      if (id === CATALOG_MODULE_ID || id === CONFIG_MODULE_ID) {
+        return mangleModuleName(id);
       }
     },
 
@@ -86,6 +84,9 @@ export function apocrypha<TMeta extends object = Record<string, any>>({
         const documents = await catalog.getAllDocuments();
         return codeGenerator.renderCatalogModule(documents);
       }
+      if (id === mangleModuleName(CONFIG_MODULE_ID)) {
+        return codeGenerator.renderConfigModule();
+      }
     },
 
     async transform(text: string, id: string) {
@@ -93,8 +94,7 @@ export function apocrypha<TMeta extends object = Record<string, any>>({
 
       const ast = parser.parse(text);
       const document = await catalog.getDocument(id);
-      const content = parser.transform(ast, document.metadata);
-      const code = codeGenerator.renderArticleModule(content);
+      const code = codeGenerator.renderArticleModule(ast, document.metadata);
 
       return {code};
     },

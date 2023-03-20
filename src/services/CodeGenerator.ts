@@ -1,32 +1,42 @@
-import toSource from 'tosource';
-import type {RenderableTreeNode} from '@markdoc/markdoc';
+import type {Node} from '@markdoc/markdoc';
 import type {Article} from '../framework';
-import type {Config, Document} from '../models';
+import type {Document, Paths} from '../models';
 
 type CodeGeneratorParams = {
-  config: Config;
+  paths: Paths;
 };
 
 export class CodeGenerator<TMeta extends object> {
-  config: Config;
+  paths: Paths;
 
-  constructor({config}: CodeGeneratorParams) {
-    this.config = config;
+  constructor({paths}: CodeGeneratorParams) {
+    this.paths = paths;
   }
 
-  renderArticleModule(content: RenderableTreeNode) {
-    return `import React from 'react';
-    import Markdoc from '@markdoc/markdoc';
-    import * as components from '${this.config.paths.components}';
+  renderArticleModule(ast: Node, metadata: TMeta) {
+    return `
+    import React from 'react';
+    import Markdoc, {Ast} from '@markdoc/markdoc';
+    import {config} from 'apocrypha/config';
+    import * as components from '${this.paths.components}';
   
-    let content = ${toSource(content)};
-    export default function ArticleComponent() {
-      return Markdoc.renderers.react(content, React, { components });
+    let ast = ${JSON.stringify(ast)};
+    let metadata = ${JSON.stringify(metadata)};
+
+    export default function ArticleComponent({variables}) {
+      const tree = Ast.fromJSON(JSON.stringify(ast));
+      const content = Markdoc.transform(tree, {
+        ...config,
+        variables,
+        metadata
+      });
+      return Markdoc.renderers.react(content, React, {components});
     }
   
     if (import.meta.hot) {
       import.meta.hot.accept((newModule) => {
-        content = newModule.content;
+        ast = newModule.ast;
+        metadata = newModule.metadata;
       });
     }`;
   }
@@ -42,9 +52,10 @@ export class CodeGenerator<TMeta extends object> {
       (document) => `'${document.path}': () => import('${document.filename}'),`,
     );
 
-    return `import { lazy, useReducer } from 'react';
+    return `
+    import {lazy, useReducer} from 'react';
   
-    export let __articles__ = ${toSource(articles)};
+    export let __articles__ = ${JSON.stringify(articles)};
     export let __modules__ = {
       ${imports.join('\n')}
     };
@@ -72,5 +83,35 @@ export class CodeGenerator<TMeta extends object> {
         return __articles__;
       };
     }`;
+  }
+
+  renderConfigModule() {
+    return `
+    import * as declarations from '${this.paths.declarations}';
+
+    export let config = {
+      nodes: {},
+      tags: {},
+      variables: {},
+      functions: {},
+      partials: {},
+    };
+
+    for (const [name, declaration] of Object.entries(declarations)) {
+      if (declaration.node) {
+        const {node, ...schema} = declaration;
+        config.nodes[node] = schema;
+      } else {
+        const {tag, ...schema} = declaration;
+        config.tags[tag] = schema;
+      }
+    }
+
+    if (import.meta.hot) {
+      import.meta.hot.accept((newModule) => {
+        config = newModule.config;
+      });
+    }
+    `;
   }
 }

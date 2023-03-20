@@ -1,8 +1,14 @@
 import type {Article} from './src/framework';
 
-export function getArticleContent(
+type ArticleContentProps<TVariables> = {
+  variables?: TVariables;
+};
+
+export function getArticleContent<TVariables = Record<string, any>>(
   path: string,
-): React.LazyExoticComponent<React.FunctionComponent>;
+): React.LazyExoticComponent<
+  React.FunctionComponent<ArticleContentProps<TVariables>>
+>;
 
 export function useArticle<TMeta extends object>(path: string): Article<TMeta>;
 

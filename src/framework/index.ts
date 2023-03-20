@@ -1,4 +1,4 @@
 export * from './Article';
-export * from './MarkdocConfig';
+export * from './MarkdocConfigWithMetadata';
 export * from './MarkdocDeclaration';
 export * from './MetadataPlugin';

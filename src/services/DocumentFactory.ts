@@ -1,26 +1,26 @@
 import crypto from 'crypto';
 import fs from 'fs';
 import yaml from 'js-yaml';
-import type {Node} from '@markdoc/markdoc';
-import type {Config, Document} from '../models';
+import {type Node} from '@markdoc/markdoc';
+import type {Document, Paths} from '../models';
 import type {MetadataPlugin} from '../framework';
-import type {MarkdocParser} from './MarkdocParser';
+import {MarkdocParser} from './MarkdocParser';
 
 type DocumentFactoryParams<TMeta extends object> = {
-  config: Config;
-  parser: MarkdocParser<TMeta>;
   metadataPlugins: MetadataPlugin<TMeta>[];
+  parser: MarkdocParser;
+  paths: Paths;
 };
 
 export class DocumentFactory<TMeta extends object> {
-  config: Config;
-  parser: MarkdocParser<TMeta>;
   metadataPlugins: MetadataPlugin<TMeta>[];
+  parser: MarkdocParser;
+  paths: Paths;
 
-  constructor({config, parser, metadataPlugins}: DocumentFactoryParams<TMeta>) {
-    this.config = config;
-    this.parser = parser;
+  constructor({metadataPlugins, parser, paths}: DocumentFactoryParams<TMeta>) {
     this.metadataPlugins = metadataPlugins;
+    this.parser = parser;
+    this.paths = paths;
   }
 
   async create(filename: string): Promise<Document<TMeta>> {
@@ -51,7 +51,7 @@ export class DocumentFactory<TMeta extends object> {
   }
 
   private getChunkId(filename: string) {
-    return filename.replace(`${this.config.paths.base}/`, '');
+    return filename.replace(`${this.paths.base}/`, '');
   }
 
   private getHash(ast: Node, metadata: any) {
@@ -78,7 +78,7 @@ export class DocumentFactory<TMeta extends object> {
 
   private getPath(filename: string) {
     const tokens = filename
-      .replace(this.config.paths.content, '')
+      .replace(this.paths.content, '')
       .replace('.md', '')
       .split('/');
 

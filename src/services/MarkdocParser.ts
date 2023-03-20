@@ -1,45 +1,18 @@
-import Markdoc from '@markdoc/markdoc';
-import type {Config, Node, Tokenizer} from '@markdoc/markdoc';
-import type {MarkdocDeclaration} from '../framework';
-import {isNodeDeclaration} from '../util';
+import Markdoc, {Tokenizer} from '@markdoc/markdoc';
 
-export type MarkdocParserParams<TMeta extends object> = {
-  declarations: MarkdocDeclaration<TMeta>[];
+type MarkdocParserParams = {
+  tokenizer?: Tokenizer;
 };
 
-export class MarkdocParser<TMeta extends object> {
-  config: Config;
+export class MarkdocParser {
   tokenizer: Tokenizer;
 
-  constructor({declarations}: MarkdocParserParams<TMeta>) {
-    this.tokenizer = new Markdoc.Tokenizer({typographer: true});
-
-    this.config = {
-      tags: {},
-      nodes: {},
-      partials: {},
-    };
-
-    for (const declaration of declarations) {
-      this.declare(declaration);
-    }
-  }
-
-  declare(declaration: MarkdocDeclaration<TMeta>) {
-    if (isNodeDeclaration(declaration)) {
-      const {node, ...schema} = declaration;
-      this.config.nodes![node] = schema;
-    } else {
-      const {tag, ...schema} = declaration;
-      this.config.tags![tag] = schema;
-    }
+  constructor({tokenizer}: MarkdocParserParams) {
+    this.tokenizer =
+      tokenizer ?? new Tokenizer({allowComments: true, allowIndentation: true});
   }
 
   parse(text: string) {
     return Markdoc.parse(this.tokenizer.tokenize(text));
-  }
-
-  transform(ast: Node, metadata: TMeta) {
-    return Markdoc.transform(ast, {...this.config, metadata});
   }
 }
