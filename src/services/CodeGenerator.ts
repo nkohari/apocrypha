@@ -1,4 +1,5 @@
 import type {Node} from '@markdoc/markdoc';
+import {CONFIG_MODULE_ID} from '../constants';
 import type {Article} from '../framework';
 import type {Document, Paths} from '../models';
 
@@ -17,7 +18,7 @@ export class CodeGenerator<TMeta extends object> {
     return `
     import React from 'react';
     import Markdoc, {Ast} from '@markdoc/markdoc';
-    import {config} from 'apocrypha/config';
+    import {config} from '${CONFIG_MODULE_ID}';
     import * as components from '${this.paths.components}';
   
     let ast = ${JSON.stringify(ast)};
@@ -59,19 +60,20 @@ export class CodeGenerator<TMeta extends object> {
     export let __modules__ = {
       ${imports.join('\n')}
     };
-    export let useArticles = () => __articles__;
+
+    export let useCatalog = () => {articles: __articles__};
   
     export const useArticle = (path) => {
-      const articles = useArticles();
+      const {articles} = useCatalog();
       return articles[path];
     };
   
-    export const getArticleContent = (path) => {
+    export const useArticleContent = (path) => {
       return lazy(__modules__[path]);
     };
   
     if (import.meta.hot) {
-      useArticles = () => {
+      useCatalog = () => {
         const [, forceUpdate] = useReducer((x) => x + 1, 0);
         if (import.meta.hot) {
           import.meta.hot.accept((newModule) => {
@@ -80,7 +82,7 @@ export class CodeGenerator<TMeta extends object> {
             forceUpdate();
           });
         }
-        return __articles__;
+        return {articles: __articles__};
       };
     }`;
   }

@@ -10,7 +10,7 @@ type DocumentCatalogParams<TMeta extends object> = {
 };
 
 export class DocumentCatalog<TMeta extends object> extends EventEmitter {
-  articles: Record<string, Document<TMeta>>;
+  documents: Record<string, Document<TMeta>>;
   documentFactory: DocumentFactory<TMeta>;
   fsWatcher?: FSWatcher;
   globPattern: string;
@@ -25,17 +25,17 @@ export class DocumentCatalog<TMeta extends object> extends EventEmitter {
     this.paths = paths;
 
     this.globPattern = `${this.paths.content}**/*.md`;
-    this.articles = {};
+    this.documents = {};
   }
 
   async getDocument(id: string) {
     await this.waitForInitialScan();
-    return this.articles[id];
+    return this.documents[id];
   }
 
   async getAllDocuments() {
     await this.waitForInitialScan();
-    return Object.values(this.articles);
+    return Object.values(this.documents);
   }
 
   async startWatching() {
@@ -68,40 +68,40 @@ export class DocumentCatalog<TMeta extends object> extends EventEmitter {
 
   private async performInitialScan() {
     const filenames = await glob(this.globPattern, {absolute: true});
-    for (const filename of filenames) {
-      this.addDocument(filename, {silent: true});
-    }
+    await Promise.all(
+      filenames.map((filename) => this.addDocument(filename, {silent: true})),
+    );
   }
 
   private async addDocument(
     filename: string,
     options: {silent?: boolean} = {silent: false},
   ) {
-    const article = await this.documentFactory.create(filename);
-    this.articles[article.filename] = article;
+    const document = await this.documentFactory.create(filename);
+    this.documents[document.filename] = document;
     if (!options.silent) {
-      this.emit('add', article);
+      this.emit('add', document);
     }
   }
 
   private async updateDocument(filename: string) {
-    const article = await this.documentFactory.create(filename);
+    const document = await this.documentFactory.create(filename);
 
-    const previous = this.articles[article.filename];
-    const changed = !previous || previous.hash !== article.hash;
+    const previous = this.documents[document.filename];
+    const changed = !previous || previous.hash !== document.hash;
 
-    this.articles[article.filename] = article;
+    this.documents[document.filename] = document;
 
     if (changed) {
-      this.emit('change', article);
+      this.emit('change', document);
     }
   }
 
   private async removeDocument(filename: string) {
-    const article = this.articles[filename];
-    if (article) {
-      delete this.articles[filename];
-      this.emit('remove', article);
+    const document = this.documents[filename];
+    if (document) {
+      delete this.documents[filename];
+      this.emit('remove', document);
     }
   }
 }

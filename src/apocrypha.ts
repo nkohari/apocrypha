@@ -1,5 +1,10 @@
 import {Plugin, ViteDevServer} from 'vite';
 import {Tokenizer} from '@markdoc/markdoc';
+import {
+  ARTICLE_FILENAME_PATTERN,
+  CATALOG_MODULE_ID,
+  CONFIG_MODULE_ID,
+} from './constants';
 import type {MetadataPlugin} from './framework';
 import {Paths} from './models';
 import {
@@ -9,10 +14,6 @@ import {
   MarkdocParser,
 } from './services';
 import {ArrayOrHash, arrayifyParameter} from './util';
-
-const CATALOG_MODULE_ID = 'apocrypha/catalog';
-const CONFIG_MODULE_ID = 'apocrypha/config';
-const ARTICLE_FILENAME_PATTERN = /\.md/;
 
 const mangleModuleName = (name: string) => `\0${name}`;
 
