@@ -43,11 +43,13 @@ export class CodeGenerator<TMeta extends object> {
   }
 
   renderCatalogModule(documents: Document<TMeta>[]) {
+    console.log(documents);
     const articles = documents.reduce((hash, document) => {
       const {chunkId, metadata, path} = document;
       hash[path] = {chunkId, metadata, path};
       return hash;
     }, {} as Record<string, Article<TMeta>>);
+    console.log(articles);
 
     const imports = documents.map(
       (document) => `'${document.path}': () => import('${document.filename}'),`,
@@ -61,10 +63,10 @@ export class CodeGenerator<TMeta extends object> {
       ${imports.join('\n')}
     };
 
-    export let useCatalog = () => {articles: __articles__};
+    export let useCatalog = () => __articles__;
   
     export const useArticle = (path) => {
-      const {articles} = useCatalog();
+      const articles = useCatalog();
       return articles[path];
     };
   
@@ -82,7 +84,7 @@ export class CodeGenerator<TMeta extends object> {
             forceUpdate();
           });
         }
-        return {articles: __articles__};
+        return __articles__;
       };
     }`;
   }
