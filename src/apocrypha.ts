@@ -2,8 +2,9 @@ import {Plugin, ViteDevServer} from 'vite';
 import {Tokenizer} from '@markdoc/markdoc';
 import {
   ARTICLE_FILENAME_PATTERN,
-  CATALOG_MODULE_ID,
-  CONFIG_MODULE_ID,
+  CATALOG_MODULE_NAME,
+  COMPONENTS_MODULE_NAME,
+  CONFIG_MODULE_NAME,
 } from './constants';
 import type {MetadataPlugin} from './framework';
 import {Paths} from './models';
@@ -59,33 +60,38 @@ export function apocrypha<TMeta extends object = Record<string, any>>(
       const {moduleGraph, watcher} = server;
 
       const invalidateCatalogModule = () => {
-        const moduleName = mangleModuleName(CATALOG_MODULE_ID);
-        const catalogModule = moduleGraph.getModuleById(moduleName);
-        if (catalogModule) {
-          moduleGraph.invalidateModule(catalogModule);
-          watcher.emit('change', moduleName);
+        const moduleId = mangleModuleName(CATALOG_MODULE_NAME);
+        const moduleNode = moduleGraph.getModuleById(moduleId);
+        if (moduleNode) {
+          moduleGraph.invalidateModule(moduleNode);
+          watcher.emit('change', moduleId);
         }
       };
 
       catalog.on('add', invalidateCatalogModule);
       catalog.on('change', invalidateCatalogModule);
       catalog.on('remove', invalidateCatalogModule);
-
       catalog.startWatching();
     },
 
     resolveId(id: string) {
-      if (id === CATALOG_MODULE_ID || id === CONFIG_MODULE_ID) {
+      if (
+        id === CATALOG_MODULE_NAME ||
+        id === COMPONENTS_MODULE_NAME ||
+        id === CONFIG_MODULE_NAME
+      ) {
         return mangleModuleName(id);
       }
     },
 
     async load(id: string) {
-      if (id === mangleModuleName(CATALOG_MODULE_ID)) {
-        const documents = await catalog.getAllDocuments();
-        return codeGenerator.renderCatalogModule(documents);
+      if (id === mangleModuleName(CATALOG_MODULE_NAME)) {
+        return codeGenerator.renderCatalogModule(catalog);
       }
-      if (id === mangleModuleName(CONFIG_MODULE_ID)) {
+      if (id === mangleModuleName(COMPONENTS_MODULE_NAME)) {
+        return codeGenerator.renderComponentsModule();
+      }
+      if (id === mangleModuleName(CONFIG_MODULE_NAME)) {
         return codeGenerator.renderConfigModule();
       }
     },
