@@ -50,8 +50,8 @@ export class CodeGenerator<TMeta extends object> {
   async renderCatalogModule(catalog: DocumentCatalog<TMeta>) {
     const documents = await catalog.getAllDocuments();
     const articles = documents.reduce((hash, document) => {
-      const {chunkId, metadata, path} = document;
-      hash[path] = {chunkId, metadata, path};
+      const {manifestId, metadata, path} = document;
+      hash[path] = {manifestId, metadata, path};
       return hash;
     }, {} as Record<string, Article<TMeta>>);
 

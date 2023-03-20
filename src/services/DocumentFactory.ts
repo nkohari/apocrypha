@@ -35,23 +35,19 @@ export class DocumentFactory<TMeta extends object> {
       }
     }
 
-    const chunkId = this.getChunkId(filename);
     const metadata = await this.getMetadata(ast, frontmatter);
+    const manifestId = this.getManifestId(filename);
     const hash = this.getHash(ast, metadata);
     const path = this.getPath(filename);
 
     return {
       ast,
-      chunkId,
       filename,
       hash,
+      manifestId,
       metadata,
       path,
     };
-  }
-
-  private getChunkId(filename: string) {
-    return filename.replace(`${this.paths.base}/`, '');
   }
 
   private getHash(ast: Node, metadata: any) {
@@ -61,6 +57,10 @@ export class DocumentFactory<TMeta extends object> {
       .update(text)
       .digest('hex')
       .substring(0, 8);
+  }
+
+  private getManifestId(filename: string) {
+    return filename.replace(`${this.paths.base}/`, '');
   }
 
   private async getMetadata(ast: Node, frontmatter: Record<string, any>) {

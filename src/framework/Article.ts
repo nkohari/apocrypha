@@ -1,5 +1,5 @@
 export type Article<TMeta extends object> = {
-  chunkId: string;
+  manifestId: string;
   metadata: TMeta;
   path: string;
 };
