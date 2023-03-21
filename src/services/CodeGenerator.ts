@@ -17,27 +17,8 @@ export class CodeGenerator<TMeta extends object> {
 
   renderArticleModule(ast: Node, metadata: TMeta) {
     return `
-    import React from 'react';
-    import Markdoc, {Ast} from '@markdoc/markdoc';
-    import {useConfig} from '${CONFIG_MODULE_NAME}';
-    import {useComponents} from '${COMPONENTS_MODULE_NAME}';
-  
-    let ast = ${JSON.stringify(ast)};
-    let metadata = ${JSON.stringify(metadata)};
-
-    export default function ArticleComponent({variables}) {
-      const components = useComponents();
-      const config = useConfig();
-
-      const tree = Ast.fromJSON(JSON.stringify(ast));
-      const content = Markdoc.transform(tree, {
-        ...config,
-        variables,
-        metadata
-      });
-      
-      return Markdoc.renderers.react(content, React, {components});
-    }
+    export let ast = ${JSON.stringify(ast)};
+    export let metadata = ${JSON.stringify(metadata)};
   
     if (import.meta.hot) {
       import.meta.hot.accept((newModule) => {
@@ -55,16 +36,44 @@ export class CodeGenerator<TMeta extends object> {
       return hash;
     }, {} as Record<string, Article<TMeta>>);
 
-    const imports = documents.map(
-      (document) => `'${document.path}': () => import('${document.filename}'),`,
+    const loaders = documents.map(
+      (document) =>
+        `'${document.path}': new Loader(() => import('${document.filename}')),`,
     );
 
     return `
-    import {lazy, useReducer} from 'react';
-  
+    import React, {useReducer} from 'react';
+    import Markdoc, {Ast} from '@markdoc/markdoc';
+    import {useConfig} from '${CONFIG_MODULE_NAME}';
+    import {useComponents} from '${COMPONENTS_MODULE_NAME}';
+
+    class Loader {
+      constructor(callback) {
+        this.callback = callback;
+        this.status = 'waiting';
+      }
+      load() {
+        if (!this.promise) {
+          this.status = 'loading';
+          this.promise = this.callback().then((result) => {
+            this.status = 'resolved';
+            this.result = result;
+          })
+          .catch((error) => {
+            this.status = 'error';
+            this.error = error;
+          });
+        }
+
+        if (this.status === 'resolved') return this.result;
+        if (this.status === 'loading') throw this.promise;
+        if (this.status === 'error') throw this.error;
+      }
+    }
+
     export let __articles__ = ${JSON.stringify(articles)};
-    export let __modules__ = {
-      ${imports.join('\n')}
+    export let __loaders__ = {
+      ${loaders.join('\n')}
     };
 
     export let useCatalog = () => __articles__;
@@ -73,21 +82,32 @@ export class CodeGenerator<TMeta extends object> {
       const articles = useCatalog();
       return articles[path];
     };
-  
-    export const useArticleContent = (path) => {
-      return lazy(__modules__[path]);
-    };
+    
+    export function ArticleContent({path, variables}) {
+      const components = useComponents();
+      const config = useConfig();
+      const {ast, metadata} = __loaders__[path].load();
+
+      const tree = Ast.fromJSON(JSON.stringify(ast));
+      const content = Markdoc.transform(tree, {
+        ...config,
+        variables,
+        metadata
+      });
+      
+      return Markdoc.renderers.react(content, React, {components});
+    }    
   
     if (import.meta.hot) {
       useCatalog = () => {
         const [, forceUpdate] = useReducer((x) => x + 1, 0);
-        if (import.meta.hot) {
-          import.meta.hot.accept((newModule) => {
-            __articles__ = newModule.__articles__;
-            __modules__ = newModule.__modules__;
-            forceUpdate();
-          });
-        }
+
+        import.meta.hot.accept((newModule) => {
+          __articles__ = newModule.__articles__;
+          __loaders__ = newModule.__loaders__;
+          forceUpdate();
+        });
+
         return __articles__;
       };
     }`;
@@ -121,12 +141,12 @@ export class CodeGenerator<TMeta extends object> {
     if (import.meta.hot) {
       useConfig = () => {
         const [, forceUpdate] = useReducer((x) => x + 1, 0);
-        if (import.meta.hot) {
-          import.meta.hot.accept((newModule) => {
-            __config__ = newModule.__config__;
-            forceUpdate();
-          });
-        }
+
+        import.meta.hot.accept((newModule) => {
+          __config__ = newModule.__config__;
+          forceUpdate();
+        });
+
         return __config__;
       };
     }
@@ -144,12 +164,12 @@ export class CodeGenerator<TMeta extends object> {
     if (import.meta.hot) {
       useComponents = () => {
         const [, forceUpdate] = useReducer((x) => x + 1, 0);
-        if (import.meta.hot) {
-          import.meta.hot.accept((newModule) => {
-            __components__ = newModule.__components__;
-            forceUpdate();
-          });
-        }
+
+        import.meta.hot.accept((newModule) => {
+          __components__ = newModule.__components__;
+          forceUpdate();
+        });
+
         return __components__;
       };
     }

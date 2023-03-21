@@ -52,30 +52,26 @@ export const ArticleList = () => {
 
 (The `apocrypha/catalog` module isn't actually part of the Apocrypha library; it's a _virtual module_ which is generated based on your project.)
 
-To display an article's content, you can use the `useArticleContent` hook. This hook returns a [lazy](https://react.dev/reference/react/lazy) React component which, when rendered, asynchronously loads the article's JavaScript module. Because of this loading mechanism, you should wrap it in a [`<Suspense>`](https://react.dev/reference/react/Suspense) boundary. Here's an example:
+To display an article's content, you can use the `ArticleContent` component. This is a React component which, when rendered, asynchronously loads the article's module and renders its content using the Markdoc React renderer. The `ArticleContent` component is designed to work with [`<Suspense>`](https://react.dev/reference/react/Suspense) boundaries, which you can use to show a loading indicator. Here's an example:
 
 ```ts
-import {useArticleContent} from 'apocrypha/catalog';
+import {ArticleContent} from 'apocrypha/catalog';
 
 type PageProps = {
   path: string;
 };
 
-export const Page = ({path}: PageProps) => {
-  const Component = useArticleContent(path);
-
-  return (
-    <Suspense fallback="Loading...">
-      <Component />
-    </Suspense>
-  );
-};
+export const Page = ({path}: PageProps) => (
+  <Suspense fallback="Loading...">
+    <ArticleContent path={path} />
+  </Suspense>
+);
 ```
 
-The component that's returned from `useArticleContent` also supports a `variables` prop, which you can use to define [variables](https://markdoc.dev/docs/variables) which can be resolved by your content. For example, you could load the currently logged-in user from somewhere:
+The `ArticleContent` component also supports a `variables` prop, which you can use to pass [variables](https://markdoc.dev/docs/variables) through to your Markdoc content. For example, you could load the currently logged-in user from somewhere:
 
 ```ts
-import {useArticleContent} from 'apocrypha/catalog';
+import {ArticleContent} from 'apocrypha/catalog';
 
 type PageProps = {
   path: string;
@@ -83,11 +79,10 @@ type PageProps = {
 
 export const Page = ({path}: PageProps) => {
   const user = /* get the currently logged-in user from somewhere */
-  const Component = useArticleContent(path);
 
   return (
     <Suspense fallback="Loading...">
-      <Component variables={{user}} />
+      <ArticleContent path={path} variables={{user}} />
     </Suspense>
   );
 };
@@ -121,7 +116,9 @@ export async function getTitle({frontmatter}: MetadataPluginParams) {
 }
 ```
 
-The return values of all of the metadata plugins are merged to create the article's metadata. The metadata is included in the response to the `useArticle` hook. It also supports an optional type parameter, so you can enforce type safety between your metadata plugins and the code that consumes the metadata they generate!
+The return values of all of the metadata plugins are merged to create the article's metadata. One important limitation: metadata must be JSON-serializable.
+
+The metadata is included in the response to the `useArticle` hook. It also supports an optional type parameter, so you can enforce type safety between your metadata plugins and the code that consumes the metadata they generate!
 
 ```ts
 type Metadata = {
