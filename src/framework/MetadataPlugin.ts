@@ -1,10 +1,13 @@
 import type {Node} from '@markdoc/markdoc';
 
-export type MetadataPluginParams = {
+export type MetadataPluginParams<
+  TFrontmatter extends object = Record<string, any>,
+> = {
   ast: Node;
-  frontmatter: Record<string, any>;
+  frontmatter: TFrontmatter;
 };
 
-export type MetadataPlugin<TMeta extends object> = (
-  params: MetadataPluginParams,
-) => Promise<Partial<TMeta>>;
+export type MetadataPlugin<
+  TMeta extends object,
+  TFrontmatter extends object = Record<string, any>,
+> = (params: MetadataPluginParams<TFrontmatter>) => Promise<Partial<TMeta>>;

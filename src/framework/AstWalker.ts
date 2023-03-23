@@ -1,16 +1,18 @@
 import {Ast, Node, Function, Variable} from '@markdoc/markdoc';
+import {MarkdocTagDeclaration} from './MarkdocTagDeclaration';
 
 export abstract class AstWalker {
   /**
    * Walks the Markdoc AST and finds all tags of the specified name.
    * @param ast The AST to examine
-   * @param tag The name of the Markdoc tag to find
+   * @param tag A declaration representing the tag, or its name
    * @returns An array of matching AST nodes
    */
-  static findTags(ast: Node, tag: string) {
+  static findTags(ast: Node, tag: MarkdocTagDeclaration | string) {
+    const tagName = typeof tag === 'object' ? tag.tag : tag;
     return this.findNodes(
       ast,
-      (node) => node.type === 'tag' && node.tag === tag,
+      (node) => node.type === 'tag' && node.tag === tagName,
     );
   }
 

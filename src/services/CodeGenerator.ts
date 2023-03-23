@@ -47,6 +47,11 @@ export class CodeGenerator<TMeta extends object> {
     import {useConfig} from '${CONFIG_MODULE_NAME}';
     import {useComponents} from '${COMPONENTS_MODULE_NAME}';
 
+    export let __articles__ = ${JSON.stringify(articles)};
+    export let __loaders__ = {
+      ${loaders.join('\n')}
+    };
+
     class Loader {
       constructor(callback) {
         this.callback = callback;
@@ -70,18 +75,6 @@ export class CodeGenerator<TMeta extends object> {
         if (this.status === 'error') throw this.error;
       }
     }
-
-    export let __articles__ = ${JSON.stringify(articles)};
-    export let __loaders__ = {
-      ${loaders.join('\n')}
-    };
-
-    export let useCatalog = () => __articles__;
-  
-    export const useArticle = (path) => {
-      const articles = useCatalog();
-      return articles[path];
-    };
     
     export function ArticleContent({path, variables}) {
       const components = useComponents();
@@ -96,7 +89,14 @@ export class CodeGenerator<TMeta extends object> {
       });
       
       return Markdoc.renderers.react(content, React, {components});
-    }    
+    }
+
+    export const useArticle = (path) => {
+      const articles = useCatalog();
+      return articles[path];
+    };
+    
+    export let useCatalog = () => __articles__;
   
     if (import.meta.hot) {
       useCatalog = () => {
