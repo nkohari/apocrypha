@@ -15,7 +15,10 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 16
-      - run: npm test
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 6.0.2          
+      - run: pnpm test
 
   publish-npm:
     needs: build
@@ -26,6 +29,9 @@ jobs:
         with:
           node-version: 16
           registry-url: https://registry.npmjs.org/
-      - run: npm publish
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 6.0.2          
+      - run: pnpm publish
         env:
           NODE_AUTH_TOKEN: ${{secrets.npm_token}}
