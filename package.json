@@ -21,6 +21,7 @@
     "@types/node": "^18.15.3",
     "@types/react": "^18.0.28",
     "command-line-args": "^5.2.1",
+    "esbuild": "^0.17.12",
     "jest": "^29.5.0",
     "tosource": "^2.0.0-alpha.3",
     "ts-jest": "^29.0.5",
@@ -33,12 +34,13 @@
     "arrowParens": "always"
   },
   "scripts": {
-    "build": "yarn run build:library && yarn run build:types",
+    "build": "pnpm run build:library && pnpm run build:types",
     "build:library": "node build.js",
     "build:types": "tsc --emitDeclarationOnly --outDir dist",
     "dev": "node build.js --watch",
+    "prepare": "npm run build",
     "start": "node dist/index.js",
-    "test": "npx jest",
-    "zen": "npx jest --watch"
+    "test": "pnpx jest",
+    "zen": "pnpx jest --watch"
   }
 }
