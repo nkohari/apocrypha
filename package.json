@@ -1,5 +1,5 @@
 {
-  "name": "apocrypha",
+  "name": "@nkohari/apocrypha",
   "version": "0.0.1",
   "description": "an engine for building websites with markdoc",
   "license": "MIT",
