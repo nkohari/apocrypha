@@ -9,7 +9,12 @@ export class MarkdocParser {
 
   constructor({tokenizer}: MarkdocParserParams) {
     this.tokenizer =
-      tokenizer ?? new Tokenizer({allowComments: true, allowIndentation: true});
+      tokenizer ??
+      new Tokenizer({
+        allowComments: true,
+        allowIndentation: true,
+        typographer: true,
+      });
   }
 
   parse(text: string) {

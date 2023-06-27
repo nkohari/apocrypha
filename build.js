@@ -8,7 +8,7 @@ const args = commandLineArgs([{name: 'watch', alias: 'w', type: Boolean}]);
 const options = {
   bundle: true,
   entryPoints: ['src/index.ts'],
-  external: ['fsevents'],
+  external: ['chokidar', 'fsevents'],
   format: 'esm',
   outdir: 'dist',
   platform: 'node',

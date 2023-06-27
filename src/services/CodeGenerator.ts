@@ -1,4 +1,5 @@
 import type {Node} from '@markdoc/markdoc';
+import toSource from 'tosource';
 import {COMPONENTS_MODULE_NAME, CONFIG_MODULE_NAME} from '../constants';
 import type {Article} from '../framework';
 import type {Paths} from '../models';
@@ -18,7 +19,7 @@ export class CodeGenerator<TMeta extends object> {
   renderArticleModule(ast: Node, metadata: TMeta) {
     return `
     export let ast = ${JSON.stringify(ast)};
-    export let metadata = ${JSON.stringify(metadata)};
+    export let metadata = ${toSource(metadata)};
   
     if (import.meta.hot) {
       import.meta.hot.accept((newModule) => {
@@ -30,27 +31,18 @@ export class CodeGenerator<TMeta extends object> {
 
   async renderCatalogModule(catalog: DocumentCatalog<TMeta>) {
     const documents = await catalog.getAllDocuments();
+
     const articles = documents.reduce((hash, document) => {
       const {manifestId, metadata, path} = document;
       hash[path] = {manifestId, metadata, path};
       return hash;
     }, {} as Record<string, Article<TMeta>>);
 
-    const loaders = documents.map(
-      (document) =>
-        `'${document.path}': new Loader(() => import('${document.filename}')),`,
-    );
-
     return `
     import React, {useReducer} from 'react';
     import Markdoc, {Ast} from '@markdoc/markdoc';
     import {useConfig} from '${CONFIG_MODULE_NAME}';
     import {useComponents} from '${COMPONENTS_MODULE_NAME}';
-
-    export let __articles__ = ${JSON.stringify(articles)};
-    export let __loaders__ = {
-      ${loaders.join('\n')}
-    };
 
     class Loader {
       constructor(callback) {
@@ -75,6 +67,16 @@ export class CodeGenerator<TMeta extends object> {
         if (this.status === 'error') throw this.error;
       }
     }
+
+    export let __articles__ = ${toSource(articles)};
+    export let __loaders__ = {
+      ${documents
+        .map(
+          (document) =>
+            `'${document.path}': new Loader(() => import('${document.filename}')),`,
+        )
+        .join('\n')}
+    };
     
     export function ArticleContent({path, variables}) {
       const components = useComponents();
@@ -132,7 +134,8 @@ export class CodeGenerator<TMeta extends object> {
       if (declaration.node) {
         const {node, ...schema} = declaration;
         __config__.nodes[node] = schema;
-      } else {
+      }
+      if (declaration.tag) {
         const {tag, ...schema} = declaration;
         __config__.tags[tag] = schema;
       }

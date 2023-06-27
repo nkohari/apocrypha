@@ -2,6 +2,7 @@ import {EventEmitter} from 'events';
 import chokidar, {FSWatcher} from 'chokidar';
 import glob from 'fast-glob';
 import type {Document, Paths} from '../models';
+import type {Maybe} from '../types';
 import type {DocumentFactory} from './DocumentFactory';
 
 type DocumentCatalogParams<TMeta extends object> = {

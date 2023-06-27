@@ -67,7 +67,13 @@ export class DocumentFactory<TMeta extends object> {
     let metadata: any = {};
 
     for (const plugin of this.metadataPlugins) {
-      const values = await plugin({ast, frontmatter});
+      const values = await plugin({
+        ast,
+        frontmatter,
+        metadata,
+        paths: this.paths,
+      });
+
       if (values) {
         metadata = {...metadata, ...values};
       }

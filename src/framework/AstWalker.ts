@@ -1,29 +1,75 @@
-import {Ast, Node, Function, Variable} from '@markdoc/markdoc';
-import {MarkdocTagDeclaration} from './MarkdocTagDeclaration';
+import {Ast} from '@markdoc/markdoc';
+import type {Node, Function, Variable} from '@markdoc/markdoc';
+import type {Predicate} from '../types';
+import type {MarkdocNodeDeclaration, MarkdocTagDeclaration} from './types';
 
 export abstract class AstWalker {
   /**
-   * Walks the Markdoc AST and finds all tags of the specified name.
+   * Recursively walks the Markdoc AST until it finds a matching node.
    * @param ast The AST to examine
-   * @param tag A declaration representing the tag, or its name
-   * @returns An array of matching AST nodes
+   * @param match The type of the node, the node's declaration, or a predicate function to call
+   * @returns The first matching node, or null if no matches are found
    */
-  static findTags(ast: Node, tag: MarkdocTagDeclaration | string) {
-    const tagName = typeof tag === 'object' ? tag.tag : tag;
-    return this.findNodes(
-      ast,
-      (node) => node.type === 'tag' && node.tag === tagName,
-    );
+  static findNode(
+    ast: Node,
+    match: string | MarkdocNodeDeclaration | Predicate<Node>,
+  ): Node | null {
+    const predicate = this.createNodePredicate(match);
+
+    for (const node of ast.walk()) {
+      if (predicate(node)) {
+        return node;
+      }
+    }
+
+    return null;
   }
 
   /**
-   * Walks the Markdoc AST and finds all nodes matching the predicate.
+   * Walks the Markdoc AST and finds all matching nodes.
    * @param ast The AST to examine
-   * @param predicate The predicate to use for matching
-   * @returns An array of matching AST nodes
+   * @param match The type of the node, the node's declaration, or a predicate function to call
+   * @returns An array of matching nodes
    */
-  static findNodes(ast: Node, predicate: (node: Node) => boolean) {
-    return Array.from(this.filterNodes(ast, predicate));
+  static findNodes(
+    ast: Node,
+    match: string | MarkdocNodeDeclaration | Predicate<Node>,
+  ) {
+    return Array.from(this.filterNodes(ast, match));
+  }
+
+  /**
+   * Recursively walks the Markdoc AST until it finds a matching node.
+   * @param ast The AST to examine
+   * @param match The name of the tag, the tag's declaration, or a predicate function to call
+   * @returns The first matching node, or null if no matches are found
+   */
+  static findTag(
+    ast: Node,
+    match: string | MarkdocTagDeclaration | Predicate<Node>,
+  ): Node | null {
+    const predicate = this.createTagPredicate(match);
+
+    for (const node of ast.walk()) {
+      if (predicate(node)) {
+        return node;
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Walks the Markdoc AST and finds all tags of the specified name.
+   * @param ast The AST to examine
+   * @param match The name of the tag, the tag's declaration, or a predicate function to call
+   * @returns An array of matching nodes
+   */
+  static findTags(
+    ast: Node,
+    match: string | MarkdocTagDeclaration | Predicate<Node>,
+  ) {
+    return Array.from(this.filterNodes(ast, this.createTagPredicate(match)));
   }
 
   /**
@@ -38,11 +84,6 @@ export abstract class AstWalker {
 
     const recursivelyFindVariables = (value: Node | Function | Variable) => {
       if (!value || typeof value !== 'object') {
-        return;
-      }
-
-      // Ignore variables within debug() function calls
-      if (Ast.isFunction(value) && value.name === 'debug') {
         return;
       }
 
@@ -66,20 +107,57 @@ export abstract class AstWalker {
   }
 
   /**
-   * Recursively walks the Markdoc AST and yields all nodes matching the given predicate.
-   * See also findNodes(), which returns an Array<Node> rather than an Iterable<Node>.
-   * @param ast The AST to examine
-   * @param predicate The predicate to match
-   * @returns An Iterable of all matching AST nodes
+   * Recursively visits each node of the Markdoc AST and calls the specified reducer
+   * function, to reduce the tree to a single value.
+   * @param ast The root of the tree to reduce
+   * @param reducer The reducer function to call on the nodes of the tree
+   * @param input The starting value for the reduction
+   * @returns The reduced value
    */
-  static *filterNodes(
+  static reduce<T>(ast: Node, reducer: (state: T, node: Node) => T, input: T) {
+    let current = reducer(input, ast);
+
+    for (const child of ast.walk()) {
+      current = this.reduce(child, reducer, current);
+    }
+
+    return current;
+  }
+
+  private static *filterNodes(
     ast: Node,
-    predicate: (node: Node) => boolean,
+    match: string | MarkdocNodeDeclaration | Predicate<Node>,
   ): Iterable<Node> {
+    const predicate = this.createNodePredicate(match);
+
     for (const node of ast.walk()) {
       if (predicate(node)) {
         yield node;
       }
+    }
+  }
+
+  private static createNodePredicate(
+    match: string | MarkdocNodeDeclaration | Predicate<Node>,
+  ): Predicate<Node> {
+    if (typeof match === 'function') {
+      return match;
+    } else if (typeof match === 'string') {
+      return (node) => node.type === match;
+    } else {
+      return (node) => node.type === match.node;
+    }
+  }
+
+  private static createTagPredicate(
+    match: string | MarkdocTagDeclaration | Predicate<Node>,
+  ): Predicate<Node> {
+    if (typeof match === 'function') {
+      return (node) => node.type === 'tag' && match(node);
+    } else if (typeof match === 'string') {
+      return (node) => node.type === 'tag' && node.tag === match;
+    } else {
+      return (node) => node.type === 'tag' && node.tag === match.tag;
     }
   }
 }

@@ -1,4 +1,4 @@
-export type ArrayOrHash<T> = T[] | Record<string, T>;
+import {ArrayOrHash, Maybe} from '../types';
 
 export function arrayifyParameter<T>(param: Maybe<ArrayOrHash<T>>) {
   if (!param) return [];

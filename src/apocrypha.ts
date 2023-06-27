@@ -14,7 +14,8 @@ import {
   CodeGenerator,
   MarkdocParser,
 } from './services';
-import {ArrayOrHash, arrayifyParameter} from './util';
+import {ArrayOrHash} from './types';
+import {arrayifyParameter} from './util';
 
 const mangleModuleName = (name: string) => `\0${name}`;
 
@@ -36,15 +37,15 @@ export function apocrypha<TMeta extends object = Record<string, any>>(
   const paths = new Paths(params.paths);
 
   const parser = new MarkdocParser({tokenizer: params.tokenizer});
-  const codeGenerator = new CodeGenerator({paths});
+  const codeGenerator = new CodeGenerator<TMeta>({paths});
 
-  const documentFactory = new DocumentFactory({
+  const documentFactory = new DocumentFactory<TMeta>({
     metadataPlugins: arrayifyParameter(params.plugins?.metadata),
     parser,
     paths,
   });
 
-  const catalog = new DocumentCatalog({
+  const catalog = new DocumentCatalog<TMeta>({
     documentFactory,
     paths,
   });
