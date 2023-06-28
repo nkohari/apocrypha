@@ -1,13 +1,10 @@
 {
   "name": "@nkohari/apocrypha",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "an engine for building websites with markdoc",
   "license": "MIT",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
-  "files": [
-    "./src/catalog.d.ts"
-  ],
   "dependencies": {
     "@markdoc/markdoc": "^0.2.2",
     "chokidar": "^3.5.3",
@@ -34,13 +31,12 @@
     "arrowParens": "always"
   },
   "scripts": {
-    "build": "pnpm run build:library && pnpm run build:types",
+    "build": "npm run build:library && npm run build:types",
     "build:library": "node build.js",
     "build:types": "tsc --emitDeclarationOnly --outDir dist",
     "dev": "node build.js --watch",
-    "prepare": "npm run build",
-    "start": "node dist/index.js",
-    "test": "pnpx jest",
-    "zen": "pnpx jest --watch"
+    "prepack": "npm run build",
+    "test": "npx jest",
+    "zen": "npx jest --watch"
   }
 }
