@@ -4,9 +4,11 @@
 
 # Apocrypha
 
-**NOTE!** This documentation is still very much a scribbled work-in-progress -- please bear with me while I improve it. :)
+**NOTE!** This documentation is still very much a scribbled work-in-progress -- please bear with me as I improve it!
 
-Apocrypha is a plugin for [Vite](https://vite.dev) that lets you build websites with Markdoc and React. Given a collection of Markdoc documents, a set of React components, and a set of Markdoc tags, it will generate a static website. During development, full hot-module reload (HMR) support is available for both content and code.
+Apocrypha is a plugin for [Vite](https://vite.dev) that lets you build websites with [Markdoc](https://markdoc.dev) and [React](https://react.dev). Given a collection of Markdoc documents, a set of React components, and a set of Markdoc tags, Apocrypha will generate a static website. During development, full hot-module reload (HMR) support is available for both content and code.
+
+For a full example of a project powered by Apocrypha, take a look at [nate.io](https://github.com/nkohari/nate.io), my personal website.
 
 ## Usage
 
@@ -15,7 +17,7 @@ To start using Apocrypha, plug it into your `vite.config.js`. For example:
 ```ts
 import {defineConfig} from 'vite';
 import react from '@vitejs/plugin-react';
-import {apocrypha} from 'apocrypha';
+import {apocrypha} from '@nkohari/apocrypha';
 
 export default defineConfig({
   plugins: [
@@ -31,12 +33,12 @@ export default defineConfig({
 });
 ```
 
-Apocrypha will recursively find all `*.md` files within the `content` path and compile them into JavaScript modules. These modules have a single default export, a React component which represents the content of the article.
+Apocrypha will recursively find all `*.md` files within the `content` path and compile them into JavaScript modules which export the Markdoc AST and the article's metadata. These modules are all written to separate JavaScript files, and are loaded dynamically at runtime when you need them.
 
 You can get the list of articles at runtime using the `useCatalog` hook. For example:
 
 ```ts
-import {useCatalog} from 'apocrypha/catalog';
+import {useCatalog} from '@nkohari/apocrypha/catalog';
 
 export const ArticleList = () => {
   const catalog = useCatalog();
@@ -52,12 +54,12 @@ export const ArticleList = () => {
 };
 ```
 
-(The `apocrypha/catalog` module isn't actually part of the Apocrypha library; it's a _virtual module_ which is generated based on your project.)
+(The `@nkohari/apocrypha/catalog` module isn't actually part of the Apocrypha library; it's a _virtual module_ which is generated at build time for your project.)
 
-To display an article's content, you can use the `ArticleContent` component. This is a React component which, when rendered, asynchronously loads the article's module and renders its content using the Markdoc React renderer. The `ArticleContent` component is designed to work with [`<Suspense>`](https://react.dev/reference/react/Suspense) boundaries, which you can use to show a loading indicator. Here's an example:
+To display an article's content, you can use the `ArticleContent` component. This is a React component which can asynchronously load the article's module and render its content using the Markdoc React renderer. The `ArticleContent` component is designed to work with [`<Suspense>`](https://react.dev/reference/react/Suspense) boundaries, which you can use to show a loading indicator. Here's an example:
 
 ```ts
-import {ArticleContent} from 'apocrypha/catalog';
+import {ArticleContent} from '@nkohari/apocrypha/catalog';
 
 type PageProps = {
   path: string;
@@ -70,7 +72,7 @@ export const Page = ({path}: PageProps) => (
 );
 ```
 
-The `ArticleContent` component also supports a `variables` prop, which you can use to pass [variables](https://markdoc.dev/docs/variables) through to your Markdoc content. For example, you could load the currently logged-in user from somewhere:
+The `ArticleContent` component also supports a `variables` prop, which you can use to pass [variables](https://markdoc.dev/docs/variables) through to your Markdoc content. For example, you could load the currently logged-in user from somewhere, and pass it to the `ArticleContent` component like this:
 
 ```ts
 import {ArticleContent} from 'apocrypha/catalog';
@@ -118,9 +120,7 @@ export async function getTitle({frontmatter}: MetadataPluginParams) {
 }
 ```
 
-The return values of all of the metadata plugins are merged to create the article's metadata. One important limitation: metadata must be JSON-serializable.
-
-The metadata is included in the response to the `useArticle` hook. It also supports an optional type parameter, so you can enforce type safety between your metadata plugins and the code that consumes the metadata they generate!
+The return values of all of the metadata plugins are merged to create the article's metadata. The metadata is included in the response to the `useArticle` hook. It also supports an optional type parameter, so you can enforce type safety between your metadata plugins and the code that consumes the metadata they generate!
 
 ```ts
 type Metadata = {
