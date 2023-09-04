@@ -81,7 +81,7 @@ export const Page = ({path}: PageProps) => (
 The `ArticleContent` component also supports a `variables` prop, which you can use to pass [variables](https://markdoc.dev/docs/variables) through to your Markdoc content. For example, you could load the currently logged-in user from somewhere, and pass it to the `ArticleContent` component like this:
 
 ```ts
-import {ArticleContent} from 'apocrypha/catalog';
+import {ArticleContent} from '@nkohari/apocrypha/catalog';
 
 type PageProps = {
   path: string;
@@ -119,7 +119,7 @@ This is a really interesting and insightful article, which is defintely not clic
 And then read it with a metadata plugin like this:
 
 ```ts
-import type {MetadataPluginParams} from 'apocrypha';
+import type {MetadataPluginParams} from '@nkohari/apocrypha';
 
 export async function getTitle({frontmatter}: MetadataPluginParams) {
   return {title: frontmatter.title};
@@ -147,7 +147,7 @@ const Page = ({path}: PageProps) => {
 You can also do more exotic things with metadata plugins. For example, let's say you want to improve your site's performance by adding `<link rel=preload>` tags for all images on each page. You could write a metadata plugin that walks the document's Markdoc AST and extracts the image URLs:
 
 ```ts
-import {AstWalker, type MetadataPluginparams} from 'apocrypha';
+import {AstWalker, type MetadataPluginparams} from '@nkohari/apocrypha';
 
 export async function getImages({ast}: MetadataPluginParams) {
   const images = AstWalker.findTags(ast, 'image').map(
