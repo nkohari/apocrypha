@@ -12,7 +12,13 @@ For a full example of a project powered by Apocrypha, take a look at [nate.io](h
 
 ## Usage
 
-To start using Apocrypha, plug it into your `vite.config.js`. For example:
+To start using Apocrypha, first install it using `npm` or your favorite Node package manager:
+
+```
+$ npm i @nkohari/apocrypha
+```
+
+Then plug it into your `vite.config.js`. For example:
 
 ```ts
 import {defineConfig} from 'vite';
