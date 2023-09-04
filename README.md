@@ -1,4 +1,4 @@
-![apocrypha](https://github.com/nkohari/apocrypha/assets/1576/7261d298-96ca-4d6e-8b06-055a42f61016)
+![apocrypha](https://github.com/nkohari/apocrypha/assets/1576/3f30609e-2b2f-465d-b61e-fe101e370672)
 
 > [Apocrypha](https://elderscrolls.fandom.com/wiki/Apocrypha) is a realm of Oblivion created and ruled over by Hermaeus Mora, the Daedric Prince of Knowledge and Fate. It is an endless library consisting of untitled books with black covers, where all forbidden knowledge can be found, and the crackling towers of learning mingle with archways of despair and confusion.
 
