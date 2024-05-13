@@ -2,6 +2,7 @@ import {Plugin, ViteDevServer} from 'vite';
 import {Tokenizer} from '@markdoc/markdoc';
 import {
   ARTICLE_FILENAME_PATTERN,
+  ASSETS_MODULE_NAME,
   CATALOG_MODULE_NAME,
   COMPONENTS_MODULE_NAME,
   CONFIG_MODULE_NAME,
@@ -21,6 +22,7 @@ const mangleModuleName = (name: string) => `\0${name}`;
 
 export type ApocryphaParams<TMeta extends object> = {
   paths: {
+    assets: string;
     components: string;
     content: string;
     declarations: string;
@@ -77,6 +79,7 @@ export function apocrypha<TMeta extends object = Record<string, any>>(
 
     resolveId(id: string) {
       if (
+        id === ASSETS_MODULE_NAME ||
         id === CATALOG_MODULE_NAME ||
         id === COMPONENTS_MODULE_NAME ||
         id === CONFIG_MODULE_NAME
@@ -86,6 +89,9 @@ export function apocrypha<TMeta extends object = Record<string, any>>(
     },
 
     async load(id: string) {
+      if (id === mangleModuleName(ASSETS_MODULE_NAME)) {
+        return codeGenerator.renderAssetsModule();
+      }
       if (id === mangleModuleName(CATALOG_MODULE_NAME)) {
         return codeGenerator.renderCatalogModule(catalog);
       }

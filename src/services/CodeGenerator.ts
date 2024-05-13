@@ -29,6 +29,36 @@ export class CodeGenerator<TMeta extends object> {
     }`;
   }
 
+  async renderAssetsModule() {
+    // Vite's import.meta.glob() expects absolute paths to be relative to the project root,
+    // not the filesystem root.
+    const relativePath = this.paths.assets.replace(this.paths.base, '');
+
+    return `
+    export let __modules__ = import.meta.glob('${relativePath}/**', {
+      import: 'default',
+      eager: true
+    });
+
+    export function getAssetUrl(path) {
+      return __modules__['${relativePath}' + path];
+    }
+
+    export function getAllAssetUrlsForFolder(folderPath) {
+      return Object.keys(__modules__)
+        .filter((path) => path.indexOf('${relativePath}' + folderPath) === 0);
+    }
+
+    if (import.meta.hot) {
+      import.meta.hot.accept((newModule) => {
+        __modules__ = import.meta.glob('${relativePath}/**', {
+          import: 'default',
+          eager: true
+        });
+      });
+    }`;
+  }
+
   async renderCatalogModule(catalog: DocumentCatalog<TMeta>) {
     const documents = await catalog.getAllDocuments();
 
