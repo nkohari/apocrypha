@@ -1,12 +1,12 @@
 {
   "name": "@nkohari/apocrypha",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "an engine for building websites with vite and markdoc",
   "license": "MIT",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "dependencies": {
-    "@markdoc/markdoc": "^0.2.2",
+    "@markdoc/markdoc": "^0.4.0",
     "chokidar": "^3.5.3",
     "fast-glob": "^3.2.12",
     "js-yaml": "^4.1.0",
