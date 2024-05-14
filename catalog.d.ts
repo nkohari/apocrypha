@@ -6,6 +6,8 @@ export function useCatalog<TMeta extends object>(): Record<
   Article<TMeta>
 >;
 
+export function getArticleModuleUrl(path: string): string;
+
 type ArticleContentProps<TVariables> = {
   path: string;
   variables?: TVariables;

@@ -4,7 +4,8 @@ export type Document<TMeta extends object> = {
   ast: Node;
   filename: string;
   hash: string;
-  manifestId: string;
+  id: string;
   metadata: TMeta;
+  moduleReferenceId?: string;
   path: string;
 };

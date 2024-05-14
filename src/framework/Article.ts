@@ -1,5 +1,5 @@
 export type Article<TMeta extends object> = {
-  manifestId: string;
+  id: string;
   metadata: TMeta;
   path: string;
 };

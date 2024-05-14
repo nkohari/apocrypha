@@ -36,7 +36,7 @@ export class DocumentFactory<TMeta extends object> {
     }
 
     const metadata = await this.getMetadata(ast, frontmatter);
-    const manifestId = this.getManifestId(filename);
+    const id = this.getId(filename);
     const hash = this.getHash(ast, metadata);
     const path = this.getPath(filename);
 
@@ -44,7 +44,7 @@ export class DocumentFactory<TMeta extends object> {
       ast,
       filename,
       hash,
-      manifestId,
+      id,
       metadata,
       path,
     };
@@ -59,7 +59,7 @@ export class DocumentFactory<TMeta extends object> {
       .substring(0, 8);
   }
 
-  private getManifestId(filename: string) {
+  private getId(filename: string) {
     return filename.replace(`${this.paths.base}/`, '');
   }
 

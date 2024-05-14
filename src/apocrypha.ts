@@ -1,4 +1,5 @@
 import {Plugin, ViteDevServer} from 'vite';
+import {OutputBundle, NormalizedOutputOptions, RenderedChunk} from 'rollup';
 import {Tokenizer} from '@markdoc/markdoc';
 import {
   ARTICLE_FILENAME_PATTERN,
@@ -6,6 +7,7 @@ import {
   CATALOG_MODULE_NAME,
   COMPONENTS_MODULE_NAME,
   CONFIG_MODULE_NAME,
+  MANIFEST_MODULE_NAME,
 } from './constants';
 import type {MetadataPlugin} from './framework';
 import {Paths} from './models';
@@ -21,11 +23,11 @@ import {arrayifyParameter} from './util';
 const mangleModuleName = (name: string) => `\0${name}`;
 
 export type ApocryphaParams<TMeta extends object> = {
-  paths: {
-    assets: string;
-    components: string;
-    content: string;
-    declarations: string;
+  paths?: {
+    assets?: string;
+    components?: string;
+    content?: string;
+    declarations?: string;
   };
   plugins?: {
     metadata?: ArrayOrHash<MetadataPlugin<TMeta>>;
@@ -65,6 +67,7 @@ export function apocrypha<TMeta extends object = Record<string, any>>(
       const invalidateCatalogModule = () => {
         const moduleId = mangleModuleName(CATALOG_MODULE_NAME);
         const moduleNode = moduleGraph.getModuleById(moduleId);
+
         if (moduleNode) {
           moduleGraph.invalidateModule(moduleNode);
           watcher.emit('change', moduleId);
@@ -82,7 +85,8 @@ export function apocrypha<TMeta extends object = Record<string, any>>(
         id === ASSETS_MODULE_NAME ||
         id === CATALOG_MODULE_NAME ||
         id === COMPONENTS_MODULE_NAME ||
-        id === CONFIG_MODULE_NAME
+        id === CONFIG_MODULE_NAME ||
+        id === MANIFEST_MODULE_NAME
       ) {
         return mangleModuleName(id);
       }
@@ -101,6 +105,10 @@ export function apocrypha<TMeta extends object = Record<string, any>>(
       if (id === mangleModuleName(CONFIG_MODULE_NAME)) {
         return codeGenerator.renderConfigModule();
       }
+      if (id === mangleModuleName(MANIFEST_MODULE_NAME)) {
+        const documents = await catalog.getAllDocuments();
+        return codeGenerator.renderManifest(documents);
+      }
     },
 
     async transform(text: string, id: string) {
@@ -111,6 +119,20 @@ export function apocrypha<TMeta extends object = Record<string, any>>(
       const code = codeGenerator.renderArticleModule(ast, document.metadata);
 
       return {code};
+    },
+
+    async generateBundle(
+      options: NormalizedOutputOptions,
+      bundle: OutputBundle,
+    ) {
+      const documents = await catalog.getAllDocuments();
+      const source = codeGenerator.renderManifest(documents, bundle);
+
+      this.emitFile({
+        type: 'asset',
+        name: MANIFEST_MODULE_NAME,
+        source,
+      });
     },
   };
 }

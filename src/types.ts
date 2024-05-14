@@ -9,3 +9,5 @@ export type Predicate<T> = (value: T) => boolean;
 
 /** Either a value, or a promise for a future value */
 export type MaybePromise<T> = T | Promise<T>;
+
+export type VitePluginMode = 'build' | 'serve';
