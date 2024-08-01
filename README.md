@@ -15,7 +15,7 @@ For a full example of a project powered by Apocrypha, take a look at [nate.io](h
 To start using Apocrypha, first install it using `npm` or your favorite Node package manager:
 
 ```
-$ npm i @nkohari/apocrypha
+$ npm i @apocrypha/core
 ```
 
 Then plug it into your `vite.config.js`. For example:
@@ -23,7 +23,7 @@ Then plug it into your `vite.config.js`. For example:
 ```ts
 import {defineConfig} from 'vite';
 import react from '@vitejs/plugin-react';
-import {apocrypha} from '@nkohari/apocrypha';
+import {apocrypha} from '@apocrypha/core';
 
 export default defineConfig({
   plugins: [
@@ -45,7 +45,7 @@ Apocrypha will recursively find all `*.md` files within the `content` path and c
 You can get the list of articles at runtime using the `useCatalog` hook. For example:
 
 ```ts
-import {useCatalog} from '@nkohari/apocrypha/catalog';
+import {useCatalog} from '@apocrypha/catalog';
 
 export const ArticleList = () => {
   const catalog = useCatalog();
@@ -61,12 +61,12 @@ export const ArticleList = () => {
 };
 ```
 
-(The `@nkohari/apocrypha/catalog` module isn't actually part of the Apocrypha library; it's a _virtual module_ which is generated at build time for your project.)
+(The `@apocrypha/catalog` module isn't actually part of the Apocrypha library; it's a _virtual module_ which is generated at build time for your project.)
 
 To display an article's content, you can use the `ArticleContent` component. This is a React component which can asynchronously load the article's module and render its content using the Markdoc React renderer. The `ArticleContent` component is designed to work with [`<Suspense>`](https://react.dev/reference/react/Suspense) boundaries, which you can use to show a loading indicator. Here's an example:
 
 ```ts
-import {ArticleContent} from '@nkohari/apocrypha/catalog';
+import {ArticleContent} from '@apocrypha/catalog';
 
 type PageProps = {
   path: string;
@@ -82,7 +82,7 @@ export const Page = ({path}: PageProps) => (
 The `ArticleContent` component also supports a `variables` prop, which you can use to pass [variables](https://markdoc.dev/docs/variables) through to your Markdoc content. For example, you could load the currently logged-in user from somewhere, and pass it to the `ArticleContent` component like this:
 
 ```ts
-import {ArticleContent} from '@nkohari/apocrypha/catalog';
+import {ArticleContent} from '@apocrypha/catalog';
 
 type PageProps = {
   path: string;
@@ -120,7 +120,7 @@ This is a really interesting and insightful article, which is defintely not clic
 And then read it with a metadata plugin like this:
 
 ```ts
-import type {MetadataPluginParams} from '@nkohari/apocrypha';
+import type {MetadataPluginParams} from '@apocrypha/core';
 
 export async function getTitle({frontmatter}: MetadataPluginParams) {
   return {title: frontmatter.title};
@@ -148,7 +148,7 @@ const Page = ({path}: PageProps) => {
 You can also do more exotic things with metadata plugins. For example, let's say you want to improve your site's performance by adding `<link rel=preload>` tags for all images on each page. You could write a metadata plugin that walks the document's Markdoc AST and extracts the image URLs:
 
 ```ts
-import {AstWalker, type MetadataPluginparams} from '@nkohari/apocrypha';
+import {AstWalker, type MetadataPluginparams} from '@apocrypha/core';
 
 export async function getImages({ast}: MetadataPluginParams) {
   const images = AstWalker.findTags(ast, 'image').map(
