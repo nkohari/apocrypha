@@ -45,7 +45,7 @@ Apocrypha will recursively find all `*.md` files within the `content` path and c
 You can get the list of articles at runtime using the `useCatalog` hook. For example:
 
 ```ts
-import {useCatalog} from '@apocrypha/catalog';
+import {useCatalog} from '@apocrypha/core/catalog';
 
 export const ArticleList = () => {
   const catalog = useCatalog();
@@ -61,12 +61,12 @@ export const ArticleList = () => {
 };
 ```
 
-(The `@apocrypha/catalog` module isn't actually part of the Apocrypha library; it's a _virtual module_ which is generated at build time for your project.)
+(The `@apocrypha/core/catalog` module isn't actually part of the Apocrypha library; it's a _virtual module_ which is generated at build time for your project.)
 
 To display an article's content, you can use the `ArticleContent` component. This is a React component which can asynchronously load the article's module and render its content using the Markdoc React renderer. The `ArticleContent` component is designed to work with [`<Suspense>`](https://react.dev/reference/react/Suspense) boundaries, which you can use to show a loading indicator. Here's an example:
 
 ```ts
-import {ArticleContent} from '@apocrypha/catalog';
+import {ArticleContent} from '@apocrypha/core/catalog';
 
 type PageProps = {
   path: string;
@@ -82,7 +82,7 @@ export const Page = ({path}: PageProps) => (
 The `ArticleContent` component also supports a `variables` prop, which you can use to pass [variables](https://markdoc.dev/docs/variables) through to your Markdoc content. For example, you could load the currently logged-in user from somewhere, and pass it to the `ArticleContent` component like this:
 
 ```ts
-import {ArticleContent} from '@apocrypha/catalog';
+import {ArticleContent} from '@apocrypha/core/catalog';
 
 type PageProps = {
   path: string;
