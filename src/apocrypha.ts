@@ -1,6 +1,6 @@
-import {Plugin, ViteDevServer} from 'vite';
-import {OutputBundle, NormalizedOutputOptions, RenderedChunk} from 'rollup';
-import {Tokenizer} from '@markdoc/markdoc';
+import { Tokenizer } from '@markdoc/markdoc';
+import { NormalizedOutputOptions, OutputBundle } from 'rollup';
+import { Plugin, ViteDevServer } from 'vite';
 import {
   ARTICLE_FILENAME_PATTERN,
   ASSETS_MODULE_NAME,
@@ -9,16 +9,11 @@ import {
   CONFIG_MODULE_NAME,
   MANIFEST_MODULE_NAME,
 } from './constants';
-import type {MetadataPlugin} from './framework';
-import {Paths} from './models';
-import {
-  DocumentCatalog,
-  DocumentFactory,
-  CodeGenerator,
-  MarkdocParser,
-} from './services';
-import {ArrayOrHash} from './types';
-import {arrayifyParameter} from './util';
+import type { MetadataPlugin } from './framework';
+import { Paths } from './models';
+import { CodeGenerator, DocumentCatalog, DocumentFactory, MarkdocParser } from './services';
+import { ArrayOrHash } from './types';
+import { arrayifyParameter } from './util';
 
 const mangleModuleName = (name: string) => `\0${name}`;
 
@@ -40,8 +35,8 @@ export function apocrypha<TMeta extends object = Record<string, any>>(
 ): Plugin {
   const paths = new Paths(params.paths);
 
-  const parser = new MarkdocParser({tokenizer: params.tokenizer});
-  const codeGenerator = new CodeGenerator<TMeta>({paths});
+  const parser = new MarkdocParser({ tokenizer: params.tokenizer });
+  const codeGenerator = new CodeGenerator<TMeta>({ paths });
 
   const documentFactory = new DocumentFactory<TMeta>({
     metadataPlugins: arrayifyParameter(params.plugins?.metadata),
@@ -62,7 +57,7 @@ export function apocrypha<TMeta extends object = Record<string, any>>(
     },
 
     configureServer(server: ViteDevServer) {
-      const {moduleGraph, watcher} = server;
+      const { moduleGraph, watcher } = server;
 
       const invalidateCatalogModule = () => {
         const moduleId = mangleModuleName(CATALOG_MODULE_NAME);
@@ -118,13 +113,12 @@ export function apocrypha<TMeta extends object = Record<string, any>>(
       const document = await catalog.getDocument(id);
       const code = codeGenerator.renderArticleModule(ast, document.metadata);
 
-      return {code};
+      return { code };
     },
 
-    async generateBundle(
-      options: NormalizedOutputOptions,
-      bundle: OutputBundle,
-    ) {
+    async generateBundle(_options: NormalizedOutputOptions, bundle: OutputBundle) {
+      if (this.environment?.name !== 'client') return;
+
       const documents = await catalog.getAllDocuments();
       const source = codeGenerator.renderManifest(documents, bundle);
 

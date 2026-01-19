@@ -1,4 +1,4 @@
-import {resolve} from 'path';
+import { resolve } from 'node:path';
 
 type PathsParams = {
   assets?: string;
@@ -14,7 +14,7 @@ export class Paths {
   content: string;
   declarations: string;
 
-  constructor({assets, components, content, declarations}: PathsParams = {}) {
+  constructor({ assets, components, content, declarations }: PathsParams = {}) {
     this.base = process.cwd();
     this.assets = this.normalizePath(assets ?? 'assets');
     this.components = this.normalizePath(components ?? 'src/components');
@@ -23,6 +23,6 @@ export class Paths {
   }
 
   private normalizePath(path: string) {
-    return resolve(process.cwd(), path) + '/';
+    return `${resolve(process.cwd(), path)}/`;
   }
 }

@@ -1,0 +1,41 @@
+{
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": "on"
+      }
+    }
+  },
+  "formatter": {
+    "enabled": true,
+    "formatWithErrors": false,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineEnding": "lf",
+    "lineWidth": 100
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "single"
+    }
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true,
+      "suspicious": {
+        // Using any in the proper context is not an error.
+        "noExplicitAny": "off"
+      },
+      "style": {
+        // I'm an adult and I know what I'm doing when I assert something is not null.
+        "noNonNullAssertion": "off",
+        // Sometimes this helps clarity.
+        "noUselessElse": "off",
+        // This is no longer recommended/required by the TypeScript team, tree-shaking works fine without it.
+        "useImportType": "off"
+      }
+    }
+  }
+}

@@ -1,14 +1,10 @@
-import type {OutputBundle, OutputChunk} from 'rollup';
-import type {Node} from '@markdoc/markdoc';
+import type { Node } from '@markdoc/markdoc';
+import type { OutputBundle, OutputChunk } from 'rollup';
 import toSource from 'tosource';
-import {
-  COMPONENTS_MODULE_NAME,
-  CONFIG_MODULE_NAME,
-  MANIFEST_MODULE_NAME,
-} from '../constants';
-import type {Article} from '../framework';
-import type {Document, Paths} from '../models';
-import {DocumentCatalog} from './DocumentCatalog';
+import { COMPONENTS_MODULE_NAME, CONFIG_MODULE_NAME, MANIFEST_MODULE_NAME } from '../constants';
+import type { Article } from '../framework';
+import type { Document, Paths } from '../models';
+import { DocumentCatalog } from './DocumentCatalog';
 
 type CodeGeneratorParams = {
   paths: Paths;
@@ -17,7 +13,7 @@ type CodeGeneratorParams = {
 export class CodeGenerator<TMeta extends object> {
   paths: Paths;
 
-  constructor({paths}: CodeGeneratorParams) {
+  constructor({ paths }: CodeGeneratorParams) {
     this.paths = paths;
   }
 
@@ -70,11 +66,14 @@ export class CodeGenerator<TMeta extends object> {
   async renderCatalogModule(catalog: DocumentCatalog<TMeta>) {
     const documents = await catalog.getAllDocuments();
 
-    const articles = documents.reduce((hash, document) => {
-      const {id, metadata, path} = document;
-      hash[path] = {id, metadata, path};
-      return hash;
-    }, {} as Record<string, Article<TMeta>>);
+    const articles = documents.reduce(
+      (hash, document) => {
+        const { id, metadata, path } = document;
+        hash[path] = { id, metadata, path };
+        return hash;
+      },
+      {} as Record<string, Article<TMeta>>,
+    );
 
     return `
       import React, {useReducer} from 'react';
@@ -111,8 +110,7 @@ export class CodeGenerator<TMeta extends object> {
       export let __loaders__ = {
         ${documents
           .map(
-            (document) =>
-              `'${document.path}': new Loader(() => import('${document.filename}')),`,
+            (document) => `'${document.path}': new Loader(() => import('${document.filename}')),`,
           )
           .join('\n')}
       };
@@ -227,15 +225,14 @@ export class CodeGenerator<TMeta extends object> {
     const manifest: Record<string, string> = {};
 
     if (bundle) {
-      const chunks = Object.values(bundle).filter(
-        (c) => c.type == 'chunk',
-      ) as OutputChunk[];
+      const chunks = Object.values(bundle).filter((c) => c.type === 'chunk') as OutputChunk[];
 
       for (const document of documents) {
-        const chunk = chunks.find(
-          (c) => c.facadeModuleId === document.filename,
-        );
-        manifest[document.id] = chunk!.fileName;
+        const chunk = chunks.find((c) => c.facadeModuleId === document.filename);
+        if (!chunk) {
+          throw new Error(`Chunk not found for document: ${document.filename}`);
+        }
+        manifest[document.id] = chunk.fileName;
       }
     } else {
       for (const document of documents) {

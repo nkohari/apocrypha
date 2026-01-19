@@ -1,4 +1,4 @@
-import {ArrayOrHash, Maybe} from '../types';
+import { ArrayOrHash, Maybe } from '../types';
 
 export function arrayifyParameter<T>(param: Maybe<ArrayOrHash<T>>) {
   if (!param) return [];

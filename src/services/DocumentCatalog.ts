@@ -1,9 +1,9 @@
-import {EventEmitter} from 'events';
-import chokidar, {FSWatcher} from 'chokidar';
+import { EventEmitter } from 'node:events';
+import chokidar, { FSWatcher } from 'chokidar';
 import glob from 'fast-glob';
-import type {Document, Paths} from '../models';
-import type {Maybe} from '../types';
-import type {DocumentFactory} from './DocumentFactory';
+import type { Document, Paths } from '../models';
+import type { Maybe } from '../types';
+import type { DocumentFactory } from './DocumentFactory';
 
 type DocumentCatalogParams<TMeta extends object> = {
   documentFactory: DocumentFactory<TMeta>;
@@ -19,7 +19,7 @@ export class DocumentCatalog<TMeta extends object> extends EventEmitter {
 
   private initialScanPromise: Maybe<Promise<void>>;
 
-  constructor({documentFactory, paths}: DocumentCatalogParams<TMeta>) {
+  constructor({ documentFactory, paths }: DocumentCatalogParams<TMeta>) {
     super();
 
     this.documentFactory = documentFactory;
@@ -68,16 +68,11 @@ export class DocumentCatalog<TMeta extends object> extends EventEmitter {
   }
 
   private async performInitialScan() {
-    const filenames = await glob(this.globPattern, {absolute: true});
-    await Promise.all(
-      filenames.map((filename) => this.addDocument(filename, {silent: true})),
-    );
+    const filenames = await glob(this.globPattern, { absolute: true });
+    await Promise.all(filenames.map((filename) => this.addDocument(filename, { silent: true })));
   }
 
-  private async addDocument(
-    filename: string,
-    options: {silent?: boolean} = {silent: false},
-  ) {
+  private async addDocument(filename: string, options: { silent?: boolean } = { silent: false }) {
     const document = await this.documentFactory.create(filename);
     this.documents[document.filename] = document;
     if (!options.silent) {

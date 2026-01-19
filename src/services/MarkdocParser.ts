@@ -1,4 +1,4 @@
-import Markdoc, {Tokenizer} from '@markdoc/markdoc';
+import Markdoc, { Tokenizer } from '@markdoc/markdoc';
 
 type MarkdocParserParams = {
   tokenizer?: Tokenizer;
@@ -7,7 +7,7 @@ type MarkdocParserParams = {
 export class MarkdocParser {
   tokenizer: Tokenizer;
 
-  constructor({tokenizer}: MarkdocParserParams) {
+  constructor({ tokenizer }: MarkdocParserParams) {
     this.tokenizer =
       tokenizer ??
       new Tokenizer({

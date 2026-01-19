@@ -1,6 +1,6 @@
-import type {Config, Node, NodeType, Schema} from '@markdoc/markdoc';
-import {Paths} from '../models';
-import {Maybe, MaybePromise} from '../types';
+import type { Config, Node, NodeType, Schema } from '@markdoc/markdoc';
+import { Paths } from '../models';
+import { Maybe, MaybePromise } from '../types';
 
 export type MarkdocConfigWithMetadata<TMeta extends object> = Config & {
   metadata: TMeta;

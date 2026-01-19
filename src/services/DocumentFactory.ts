@@ -1,10 +1,10 @@
-import crypto from 'crypto';
-import fs from 'fs';
+import crypto from 'node:crypto';
+import fs from 'node:fs';
+import { type Node } from '@markdoc/markdoc';
 import yaml from 'js-yaml';
-import {type Node} from '@markdoc/markdoc';
-import type {Document, Paths} from '../models';
-import type {MetadataPlugin} from '../framework';
-import {MarkdocParser} from './MarkdocParser';
+import type { MetadataPlugin } from '../framework';
+import type { Document, Paths } from '../models';
+import { MarkdocParser } from './MarkdocParser';
 
 type DocumentFactoryParams<TMeta extends object> = {
   metadataPlugins: MetadataPlugin<TMeta>[];
@@ -17,14 +17,14 @@ export class DocumentFactory<TMeta extends object> {
   parser: MarkdocParser;
   paths: Paths;
 
-  constructor({metadataPlugins, parser, paths}: DocumentFactoryParams<TMeta>) {
+  constructor({ metadataPlugins, parser, paths }: DocumentFactoryParams<TMeta>) {
     this.metadataPlugins = metadataPlugins;
     this.parser = parser;
     this.paths = paths;
   }
 
   async create(filename: string): Promise<Document<TMeta>> {
-    const text = await fs.promises.readFile(filename, {encoding: 'utf8'});
+    const text = await fs.promises.readFile(filename, { encoding: 'utf8' });
     const ast = this.parser.parse(text);
 
     let frontmatter: Record<string, any> = {};
@@ -51,12 +51,8 @@ export class DocumentFactory<TMeta extends object> {
   }
 
   private getHash(ast: Node, metadata: any) {
-    const text = JSON.stringify({ast, metadata});
-    return crypto
-      .createHash('sha256')
-      .update(text)
-      .digest('hex')
-      .substring(0, 8);
+    const text = JSON.stringify({ ast, metadata });
+    return crypto.createHash('sha256').update(text).digest('hex').substring(0, 8);
   }
 
   private getId(filename: string) {
@@ -75,7 +71,7 @@ export class DocumentFactory<TMeta extends object> {
       });
 
       if (values) {
-        metadata = {...metadata, ...values};
+        metadata = { ...metadata, ...values };
       }
     }
 
@@ -83,14 +79,11 @@ export class DocumentFactory<TMeta extends object> {
   }
 
   private getPath(filename: string) {
-    const tokens = filename
-      .replace(this.paths.content, '')
-      .replace('.md', '')
-      .split('/');
+    const tokens = filename.replace(this.paths.content, '').replace('.md', '').split('/');
 
     const isIndex = tokens[tokens.length - 1] === 'index';
     const pathTokens = isIndex ? tokens.slice(0, -1) : tokens;
 
-    return '/' + pathTokens.join('/');
+    return `/${pathTokens.join('/')}`;
   }
 }

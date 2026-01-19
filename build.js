@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
-const {build, buildSync} = require('esbuild');
+const { build, buildSync } = require('esbuild');
 const commandLineArgs = require('command-line-args');
 
-const args = commandLineArgs([{name: 'watch', alias: 'w', type: Boolean}]);
+const args = commandLineArgs([{ name: 'watch', alias: 'w', type: Boolean }]);
 
 const options = {
   bundle: true,
@@ -32,6 +32,6 @@ if (args.watch) {
     console.log('esbuild complete, watching for changes');
   });
 } else {
-  buildSync({...options, format: 'cjs'});
-  buildSync({...options, outExtension: {'.js': '.mjs'}});
+  buildSync({ ...options, format: 'cjs' });
+  buildSync({ ...options, outExtension: { '.js': '.mjs' } });
 }
