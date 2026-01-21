@@ -70,8 +70,8 @@ export function apocrypha<TMeta extends object = Record<string, any>>(
       };
 
       catalog.on('add', invalidateCatalogModule);
-      catalog.on('change', invalidateCatalogModule);
       catalog.on('remove', invalidateCatalogModule);
+
       catalog.startWatching();
     },
 
@@ -111,7 +111,7 @@ export function apocrypha<TMeta extends object = Record<string, any>>(
 
       const ast = parser.parse(text);
       const document = await catalog.getDocument(id);
-      const code = codeGenerator.renderArticleModule(ast, document.metadata);
+      const code = codeGenerator.renderArticleModule(ast, document.metadata, document.path);
 
       return { code };
     },

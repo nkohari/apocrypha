@@ -14,18 +14,14 @@ export class DocumentCatalog<TMeta extends object> extends EventEmitter {
   documents: Record<string, Document<TMeta>>;
   documentFactory: DocumentFactory<TMeta>;
   fsWatcher?: FSWatcher;
-  globPattern: string;
   paths: Paths;
 
   private initialScanPromise: Maybe<Promise<void>>;
 
   constructor({ documentFactory, paths }: DocumentCatalogParams<TMeta>) {
     super();
-
     this.documentFactory = documentFactory;
     this.paths = paths;
-
-    this.globPattern = `${this.paths.content}**/*.md`;
     this.documents = {};
   }
 
@@ -43,7 +39,7 @@ export class DocumentCatalog<TMeta extends object> extends EventEmitter {
     await this.waitForInitialScan();
 
     return new Promise<void>((resolve) => {
-      this.fsWatcher = chokidar.watch(this.globPattern, {
+      this.fsWatcher = chokidar.watch(this.paths.content, {
         persistent: true,
         ignoreInitial: true,
       });
@@ -68,7 +64,7 @@ export class DocumentCatalog<TMeta extends object> extends EventEmitter {
   }
 
   private async performInitialScan() {
-    const filenames = await glob(this.globPattern, { absolute: true });
+    const filenames = await glob(`${this.paths.content}/**/*.md`, { absolute: true });
     await Promise.all(filenames.map((filename) => this.addDocument(filename, { silent: true })));
   }
 
