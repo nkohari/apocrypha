@@ -17,16 +17,26 @@ export class CodeGenerator<TMeta extends object> {
     this.paths = paths;
   }
 
-  renderArticleModule(ast: Node, metadata: TMeta) {
+  renderArticleModule(ast: Node, metadata: TMeta, path: string) {
     return `
-      export let ast = ${JSON.stringify(ast)};
-      export let metadata = ${toSource(metadata)};
-    
+      export const article = {
+        ast: ${JSON.stringify(ast)},
+        metadata: ${toSource(metadata)}
+      };
+
+      if (typeof window !== 'undefined' && window.__apocrypha__) {
+        window.__apocrypha__.put('${path}', article);
+
+        const isHotReload = import.meta.hot?.data?.loaded;
+
+        if (isHotReload) {
+          window.__apocrypha__.broadcast();
+        }
+      }
+
       if (import.meta.hot) {
-        import.meta.hot.accept((newModule) => {
-          ast = newModule.ast;
-          metadata = newModule.metadata;
-        });
+        import.meta.hot.data.loaded = true;
+        import.meta.hot.accept();
       }
     `;
   }
@@ -76,7 +86,7 @@ export class CodeGenerator<TMeta extends object> {
     );
 
     return `
-      import React, {useReducer} from 'react';
+      import React, {useEffect, useReducer} from 'react';
       import Markdoc, {Ast} from '@markdoc/markdoc';
       import {useConfig} from '${CONFIG_MODULE_NAME}';
       import {useComponents} from '${COMPONENTS_MODULE_NAME}';
@@ -106,6 +116,34 @@ export class CodeGenerator<TMeta extends object> {
         }
       }
 
+      class Registry {
+        constructor() {
+          this.entries = new Map();
+          this.listeners = new Set();
+        }
+        get(path) {
+          return this.entries.get(path);
+        }
+        put(path, article) {
+          this.entries.set(path, article);
+        }
+        subscribe(listener) {
+          this.listeners.add(listener);
+        }
+        unsubscribe(listener) {
+          this.listeners.delete(listener);
+        }
+        broadcast() {
+          this.listeners.forEach((listener) => listener());
+        }
+      }
+
+      const registry = new Registry();
+
+      if (typeof window !== 'undefined') {
+        window.__apocrypha__ = registry;
+      }
+
       export let __articles__ = ${toSource(articles)};
       export let __loaders__ = {
         ${documents
@@ -119,10 +157,22 @@ export class CodeGenerator<TMeta extends object> {
         return manifest[path];
       }
 
+      export function getArticleContent(path) {
+        __loaders__[path].load();
+        return registry.get(path);
+      }
+
       export function ArticleContent({path, variables}) {
+        const [, forceUpdate] = useReducer((x) => x + 1, 0);
+
+        useEffect(() => {
+          registry.subscribe(forceUpdate);
+          return () => registry.unsubscribe(forceUpdate);
+        }, []);
+
         const components = useComponents();
         const config = useConfig();
-        const {ast, metadata} = __loaders__[path].load();
+        const {ast, metadata} = getArticleContent(path);
 
         const tree = Ast.fromJSON(JSON.stringify(ast));
         const content = Markdoc.transform(tree, {
@@ -134,25 +184,34 @@ export class CodeGenerator<TMeta extends object> {
         return Markdoc.renderers.react(content, React, {components});
       }
 
-      export const useArticle = (path) => {
-        const articles = useCatalog();
-        return articles[path];
+      export function useArticle(path) {
+        const [, forceUpdate] = useReducer((x) => x + 1, 0);
+
+        useEffect(() => {
+          registry.subscribe(forceUpdate);
+          return () => registry.unsubscribe(forceUpdate);
+        }, []);
+
+        return __articles__[path];
       };
       
-      export let useCatalog = () => __articles__;
+      export function useCatalog() {
+        const [, forceUpdate] = useReducer((x) => x + 1, 0);
+
+        useEffect(() => {
+          registry.subscribe(forceUpdate);
+          return () => registry.unsubscribe(forceUpdate);
+        }, []);
+
+        return __articles__;
+      }
     
       if (import.meta.hot) {
-        useCatalog = () => {
-          const [, forceUpdate] = useReducer((x) => x + 1, 0);
-
-          import.meta.hot.accept((newModule) => {
-            __articles__ = newModule.__articles__;
-            __loaders__ = newModule.__loaders__;
-            forceUpdate();
-          });
-
-          return __articles__;
-        };
+        import.meta.hot.accept((newModule) => {
+          __articles__ = newModule.__articles__;
+          __loaders__ = newModule.__loaders__;
+          registry.broadcast();
+        });
       }
     `;
   }

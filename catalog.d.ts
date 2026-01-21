@@ -12,4 +12,4 @@ type ArticleContentProps<TVariables> = {
 
 export function ArticleContent<TVariables = Record<string, any>>(
   props: ArticleContentProps<TVariables>,
-): JSX.Element;
+): React.ReactNode;
