@@ -85,6 +85,10 @@ export class CodeGenerator<TMeta extends object> {
       {} as Record<string, Article<TMeta>>,
     );
 
+    const loaders = documents
+      .map((document) => `'${document.path}': new Loader(() => import('${document.filename}')),`)
+      .join('\n');
+
     return `
       import React, {useEffect, useReducer} from 'react';
       import Markdoc, {Ast} from '@markdoc/markdoc';
@@ -138,19 +142,22 @@ export class CodeGenerator<TMeta extends object> {
         }
       }
 
-      const registry = new Registry();
+      let registry;
 
       if (typeof window !== 'undefined') {
-        window.__apocrypha__ = registry;
+        if (!window.__apocrypha__) {
+          registry = new Registry();
+          window.__apocrypha__ = registry;
+        } else {
+          registry = window.__apocrypha__;
+        }
+      } else {
+        registry = new Registry();
       }
 
       export let __articles__ = ${toSource(articles)};
       export let __loaders__ = {
-        ${documents
-          .map(
-            (document) => `'${document.path}': new Loader(() => import('${document.filename}')),`,
-          )
-          .join('\n')}
+        ${loaders}
       };
 
       export function getArticleModuleUrl(path) {
@@ -209,7 +216,12 @@ export class CodeGenerator<TMeta extends object> {
       if (import.meta.hot) {
         import.meta.hot.accept((newModule) => {
           __articles__ = newModule.__articles__;
-          __loaders__ = newModule.__loaders__;
+          // Only add loaders for new articles
+          for (const path in newModule.__loaders__) {
+            if (!__loaders__[path]) {
+              __loaders__[path] = newModule.__loaders__[path];
+            }
+          }
           registry.broadcast();
         });
       }
