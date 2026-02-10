@@ -26,6 +26,7 @@ export type MetadataPluginParams<TMeta extends object = Record<string, any>> = {
   ast: Node;
   frontmatter: Record<string, any>;
   metadata: TMeta;
+  path: string;
   paths: Paths;
 };
 

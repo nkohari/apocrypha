@@ -35,10 +35,10 @@ export class DocumentFactory<TMeta extends object> {
       }
     }
 
-    const metadata = await this.getMetadata(ast, frontmatter);
     const id = this.getId(filename);
-    const hash = this.getHash(ast, metadata);
     const path = this.getPath(filename);
+    const metadata = await this.getMetadata(path, ast, frontmatter);
+    const hash = this.getHash(ast, metadata);
 
     return {
       ast,
@@ -59,7 +59,7 @@ export class DocumentFactory<TMeta extends object> {
     return filename.replace(`${this.paths.base}/`, '');
   }
 
-  private async getMetadata(ast: Node, frontmatter: Record<string, any>) {
+  private async getMetadata(path: string, ast: Node, frontmatter: Record<string, any>) {
     let metadata: any = {};
 
     for (const plugin of this.metadataPlugins) {
@@ -67,6 +67,7 @@ export class DocumentFactory<TMeta extends object> {
         ast,
         frontmatter,
         metadata,
+        path,
         paths: this.paths,
       });
 
