@@ -51,9 +51,14 @@ export function apocrypha<TMeta extends object = Record<string, any>>(
 
   return {
     name: 'vite-plugin-apocrypha',
+    enforce: 'pre',
 
     async buildEnd() {
       return catalog.stopWatching();
+    },
+
+    applyToEnvironment() {
+      return true;
     },
 
     configureServer(server: ViteDevServer) {
@@ -120,7 +125,7 @@ export function apocrypha<TMeta extends object = Record<string, any>>(
       if (this.environment?.name !== 'client') return;
 
       const documents = await catalog.getAllDocuments();
-      const source = codeGenerator.renderManifest(documents, bundle);
+      const source = codeGenerator.renderManifestForBundle(documents, bundle);
 
       this.emitFile({
         type: 'asset',

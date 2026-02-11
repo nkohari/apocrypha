@@ -1,6 +1,6 @@
 {
   "name": "@apocrypha/core",
-  "version": "0.3.3",
+  "version": "0.4.0",
   "description": "an engine for building websites with vite and markdoc",
   "license": "MIT",
   "author": "Nate Kohari <nkohari@gmail.com>",
