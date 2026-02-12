@@ -2,7 +2,7 @@ import type { Node } from '@markdoc/markdoc';
 import type { OutputBundle, OutputChunk } from 'rollup';
 import toSource from 'tosource';
 import { COMPONENTS_MODULE_NAME, CONFIG_MODULE_NAME, MANIFEST_MODULE_NAME } from '../constants';
-import type { Article } from '../framework';
+import type { Article, ManifestEntry } from '../framework';
 import type { Document, Paths } from '../models';
 import { DocumentCatalog } from './DocumentCatalog';
 
@@ -94,7 +94,6 @@ export class CodeGenerator<TMeta extends object> {
       import Markdoc, {Ast} from '@markdoc/markdoc';
       import {useConfig} from '${CONFIG_MODULE_NAME}';
       import {useComponents} from '${COMPONENTS_MODULE_NAME}';
-      import {manifest} from '${MANIFEST_MODULE_NAME}';
 
       class Loader {
         constructor(callback) {
@@ -159,10 +158,6 @@ export class CodeGenerator<TMeta extends object> {
       export let __loaders__ = {
         ${loaders}
       };
-
-      export function getArticleModuleUrl(path) {
-        return manifest[path];
-      }
 
       export function getArticleContent(path) {
         __loaders__[path].load();
@@ -292,27 +287,42 @@ export class CodeGenerator<TMeta extends object> {
     `;
   }
 
-  renderManifest(documents: Document<TMeta>[], bundle?: OutputBundle) {
-    const manifest: Record<string, string> = {};
+  renderManifest(documents: Document<TMeta>[]) {
+    const manifest: Record<string, ManifestEntry<TMeta>> = {};
 
-    if (bundle) {
-      const chunks = Object.values(bundle).filter((c) => c.type === 'chunk') as OutputChunk[];
-
-      for (const document of documents) {
-        const chunk = chunks.find((c) => c.facadeModuleId === document.filename);
-        if (!chunk) {
-          throw new Error(`Chunk not found for document: ${document.filename}`);
-        }
-        manifest[document.id] = chunk.fileName;
-      }
-    } else {
-      for (const document of documents) {
-        manifest[document.id] = `${document.id}?import`;
-      }
+    for (const document of documents) {
+      manifest[document.id] = {
+        metadata: document.metadata,
+        moduleFilename: `${document.id}?import`,
+        path: document.path,
+      };
     }
 
     return `
-      export const manifest = ${JSON.stringify(manifest, null, 2)};
+      export const manifest = ${toSource(manifest)};
+    `;
+  }
+
+  renderManifestForBundle(documents: Document<TMeta>[], bundle: OutputBundle) {
+    const manifest: Record<string, ManifestEntry<TMeta>> = {};
+    const chunks = Object.values(bundle).filter((c) => c.type === 'chunk') as OutputChunk[];
+
+    for (const document of documents) {
+      const chunk = chunks.find((c) => c.facadeModuleId === document.filename);
+
+      if (!chunk) {
+        throw new Error(`Chunk not found for document: ${document.filename}`);
+      }
+
+      manifest[document.id] = {
+        metadata: document.metadata,
+        moduleFilename: chunk.fileName,
+        path: document.path,
+      };
+    }
+
+    return `
+      export const manifest = ${toSource(manifest)};
     `;
   }
 }
