@@ -306,7 +306,7 @@ export class CodeGenerator<TMeta extends object> {
     const manifest: Record<string, string> = {};
 
     for (const document of documents) {
-      manifest[document.id] = `${document.id}?import`;
+      manifest[document.path] = `${document.id}?import`;
     }
 
     return JSON.stringify(manifest, null, 2);
@@ -323,7 +323,7 @@ export class CodeGenerator<TMeta extends object> {
         throw new Error(`Chunk not found for document: ${document.filename}`);
       }
 
-      manifest[document.id] = chunk.fileName;
+      manifest[document.path] = chunk.fileName;
     }
 
     return JSON.stringify(manifest, null, 2);
