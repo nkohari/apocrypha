@@ -1,13 +1,13 @@
 import { Tokenizer } from '@markdoc/markdoc';
 import { NormalizedOutputOptions, OutputBundle } from 'rollup';
-import { Plugin, ViteDevServer } from 'vite';
+import { Plugin, ResolvedConfig, ViteDevServer } from 'vite';
 import {
   ARTICLE_FILENAME_PATTERN,
   ASSETS_MODULE_NAME,
   CATALOG_MODULE_NAME,
   COMPONENTS_MODULE_NAME,
   CONFIG_MODULE_NAME,
-  MANIFEST_MODULE_NAME,
+  METADATA_MODULE_NAME,
 } from './constants';
 import type { MetadataPlugin } from './framework';
 import { Paths } from './models';
@@ -18,6 +18,7 @@ import { arrayifyParameter } from './util';
 const mangleModuleName = (name: string) => `\0${name}`;
 
 export type ApocryphaParams<TMeta extends object> = {
+  manifest?: string;
   paths?: {
     assets?: string;
     components?: string;
@@ -33,6 +34,7 @@ export type ApocryphaParams<TMeta extends object> = {
 export function apocrypha<TMeta extends object = Record<string, any>>(
   params: ApocryphaParams<TMeta>,
 ): Plugin {
+  const manifestFilename = params.manifest || 'manifest.json';
   const paths = new Paths(params.paths);
 
   const parser = new MarkdocParser({ tokenizer: params.tokenizer });
@@ -49,9 +51,15 @@ export function apocrypha<TMeta extends object = Record<string, any>>(
     paths,
   });
 
+  let resolvedConfig: ResolvedConfig;
+
   return {
     name: 'vite-plugin-apocrypha',
     enforce: 'pre',
+
+    configResolved(config: ResolvedConfig) {
+      resolvedConfig = config;
+    },
 
     async buildEnd() {
       return catalog.stopWatching();
@@ -62,7 +70,7 @@ export function apocrypha<TMeta extends object = Record<string, any>>(
     },
 
     configureServer(server: ViteDevServer) {
-      const { moduleGraph, watcher } = server;
+      const { moduleGraph, watcher, middlewares } = server;
 
       const invalidateCatalogModule = () => {
         const moduleId = mangleModuleName(CATALOG_MODULE_NAME);
@@ -78,6 +86,24 @@ export function apocrypha<TMeta extends object = Record<string, any>>(
       catalog.on('remove', invalidateCatalogModule);
 
       catalog.startWatching();
+
+      // During development, we need to serve the manifest dynamically. When the final bundle
+      // is generated, it'll be written as a static asset at the same path to support production.
+      middlewares.use(async (req, res, next) => {
+        const manifestPath = `/${resolvedConfig.build.assetsDir}/${manifestFilename}`;
+
+        if (req.url === manifestPath) {
+          const documents = await catalog.getAllDocuments();
+          const source = codeGenerator.renderManifestModuleForDevelopment(documents);
+
+          res.setHeader('Content-Type', 'application/json');
+          res.setHeader('Cache-Control', 'no-cache');
+          res.end(source);
+          return;
+        }
+
+        next();
+      });
     },
 
     resolveId(id: string) {
@@ -86,7 +112,7 @@ export function apocrypha<TMeta extends object = Record<string, any>>(
         id === CATALOG_MODULE_NAME ||
         id === COMPONENTS_MODULE_NAME ||
         id === CONFIG_MODULE_NAME ||
-        id === MANIFEST_MODULE_NAME
+        id === METADATA_MODULE_NAME
       ) {
         return mangleModuleName(id);
       }
@@ -105,9 +131,9 @@ export function apocrypha<TMeta extends object = Record<string, any>>(
       if (id === mangleModuleName(CONFIG_MODULE_NAME)) {
         return codeGenerator.renderConfigModule();
       }
-      if (id === mangleModuleName(MANIFEST_MODULE_NAME)) {
+      if (id === mangleModuleName(METADATA_MODULE_NAME)) {
         const documents = await catalog.getAllDocuments();
-        return codeGenerator.renderManifest(documents);
+        return codeGenerator.renderMetadataModule(documents);
       }
     },
 
@@ -125,11 +151,11 @@ export function apocrypha<TMeta extends object = Record<string, any>>(
       if (this.environment?.name !== 'client') return;
 
       const documents = await catalog.getAllDocuments();
-      const source = codeGenerator.renderManifestForBundle(documents, bundle);
+      const source = codeGenerator.renderManifestModuleForProduction(documents, bundle);
 
       this.emitFile({
         type: 'asset',
-        name: MANIFEST_MODULE_NAME,
+        fileName: `${resolvedConfig.build.assetsDir}/${manifestFilename}`,
         source,
       });
     },

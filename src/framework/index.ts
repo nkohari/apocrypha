@@ -1,4 +1,4 @@
 export * from './Article';
 export * from './AstWalker';
-export * from './ManifestEntry';
+export * from './MetadataEntry';
 export * from './types';
