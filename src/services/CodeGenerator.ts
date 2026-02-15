@@ -2,7 +2,7 @@ import type { Node } from '@markdoc/markdoc';
 import type { OutputBundle, OutputChunk } from 'rollup';
 import toSource from 'tosource';
 import { CATALOG_MODULE_NAME, COMPONENTS_MODULE_NAME, CONFIG_MODULE_NAME } from '../constants';
-import type { Article, MetadataEntry } from '../framework';
+import type { Article } from '../framework';
 import type { Document, Paths } from '../models';
 import { DocumentCatalog } from './DocumentCatalog';
 
@@ -308,21 +308,6 @@ export class CodeGenerator<TMeta extends object> {
           return __components__;
         };
       }
-    `;
-  }
-
-  renderMetadataModule(documents: Document<TMeta>[]) {
-    const metadata: Record<string, MetadataEntry<TMeta>> = {};
-
-    for (const document of documents) {
-      metadata[document.id] = {
-        path: document.path,
-        metadata: document.metadata,
-      };
-    }
-
-    return `
-      export const metadata = ${toSource(metadata)};
     `;
   }
 
