@@ -8,6 +8,7 @@ import {
   COMPONENTS_MODULE_NAME,
   CONFIG_MODULE_NAME,
   METADATA_MODULE_NAME,
+  REACT_MODULE_NAME,
 } from './constants';
 import type { MetadataPlugin } from './framework';
 import { Paths } from './models';
@@ -112,7 +113,8 @@ export function apocrypha<TMeta extends object = Record<string, any>>(
         id === CATALOG_MODULE_NAME ||
         id === COMPONENTS_MODULE_NAME ||
         id === CONFIG_MODULE_NAME ||
-        id === METADATA_MODULE_NAME
+        id === METADATA_MODULE_NAME ||
+        id === REACT_MODULE_NAME
       ) {
         return mangleModuleName(id);
       }
@@ -134,6 +136,9 @@ export function apocrypha<TMeta extends object = Record<string, any>>(
       if (id === mangleModuleName(METADATA_MODULE_NAME)) {
         const documents = await catalog.getAllDocuments();
         return codeGenerator.renderMetadataModule(documents);
+      }
+      if (id === mangleModuleName(REACT_MODULE_NAME)) {
+        return codeGenerator.renderReactModule();
       }
     },
 
