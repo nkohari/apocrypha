@@ -49,7 +49,8 @@ The main export is the `apocrypha()` function, which returns a Vite plugin. The 
 
 The plugin creates several virtual modules (prefixed with `\0` in Vite's module graph):
 
-- `@apocrypha/core/catalog`: Exports `useCatalog()`, `useArticle()`, `ArticleContent`, and article metadata
+- `@apocrypha/core/catalog`: Exports article metadata (`__articles__`), loaders (`__loaders__`), registry, and `getArticleContent()` function
+- `@apocrypha/core/react`: Exports React-specific functionality: `useCatalog()`, `useArticle()`, and `ArticleContent` component
 - `@apocrypha/core/components`: Exports `useComponents()` for React components
 - `@apocrypha/core/config`: Exports `useConfig()` for Markdoc node/tag declarations
 - `@apocrypha/core/assets`: Exports `getAssetUrl()` and `getAllAssetUrlsForFolder()` for asset management

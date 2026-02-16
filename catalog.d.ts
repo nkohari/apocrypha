@@ -1,13 +1,7 @@
-import type { Article } from './src/framework';
+import type { Article, ArticleLoader } from './src/framework';
 
-export function useArticle<TMeta extends object>(path: string): Article<TMeta>;
-export function useCatalog<TMeta extends object>(): Record<string, Article<TMeta>>;
-
-type ArticleContentProps<TVariables> = {
-  path: string;
-  variables?: TVariables;
-};
-
-export function ArticleContent<TVariables = Record<string, any>>(
-  props: ArticleContentProps<TVariables>,
-): React.ReactNode;
+export function getArticle<TMeta extends object>(path: string): Article<TMeta> | undefined;
+export function getCatalog<TMeta extends object>(): Record<string, Article<TMeta>> | undefined;
+export function getArticleLoader<TMeta extends object>(
+  path: string,
+): ArticleLoader<TMeta> | undefined;
